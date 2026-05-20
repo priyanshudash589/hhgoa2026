@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Imbue, Victor_Mono } from "next/font/google";
 import "./globals.css";
+import "../components/ui/LogoLoop.css";
 
 const victorMono = Victor_Mono({
   variable: "--font-victor-mono",

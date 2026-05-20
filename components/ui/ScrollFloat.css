@@ -1,0 +1,14 @@
+.scroll-float-container {
+  overflow: hidden;
+  display: block;
+}
+
+.scroll-float-text {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.char {
+  display: inline-block;
+  white-space: pre;
+}
