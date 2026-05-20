@@ -1,36 +1,104 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# HH GOA 2026
 
-## Getting Started
+**A Figma-to-React landing page for Hacker House Goa.**
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## What is HH GOA?
+
+A single-page website for Hacker House Goa 2026 — a 4-day experimental hackathon in Goa, India. The entire UI is rendered from a Figma design tree using an auto-generated token-to-CSS pipeline.
+
+---
+
+## Branches
+
+| Branch | Description |
+|---|---|
+| `main` | Production base |
+| `dhanush` | Active — animation tweaks, cleanup |
+| `pd/ui-updates` | Stalled — earlier UI experiments |
+
+---
+
+## Structure
+
+```
+app/                        Next.js App Router
+  layout.tsx                Root layout + fonts (Imbue, Victor Mono)
+  page.tsx                  Entry → <FigmaHomeRenderer />
+  globals.css               Tailwind v4 + brand tokens + keyframes
+
+components/home/
+  figma-home-renderer.tsx   The entire page — recursive Figma node renderer
+
+lib/
+  figma-tokens.ts           20,838-line auto-generated design token map
+  figma-home-tree.ts        5,099-line auto-generated Figma node tree
+  figma-mappers.ts          Runtime converters: Figma tokens → CSS
+  figma-assets.ts           Node ID → asset path map (181 SVGs + 12 PNGs)
+
+scripts/
+  extract-figma-home.mjs    Pipeline: Figma YAML → TypeScript
+
+public/assets/              193 assets (~28 MB)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Architecture
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+Figma Design (1440×16024)
+  ↓ Framelink MCP → YAML
+extract-figma-home.mjs
+  ↓ generates
+figma-tokens.ts + figma-home-tree.ts
+  ↓ parsed at runtime by
+figma-mappers.ts
+  ↓ consumed by
+figma-home-renderer.tsx
+  ↓ renders
+<motion.div> / <img> / <p> / <button>  + framer-motion animations
+```
 
-## Learn More
+The Figma canvas is rendered at fixed size (1440×16024px), then CSS-scaled via `transform: scale(viewport / 1440)` for responsive fidelity.
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Tech Stack
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+| Layer | |
+|---|---|
+| Framework | Next.js 16 (App Router) |
+| Language | TypeScript 5 |
+| UI | React 19 |
+| Styling | Tailwind CSS v4 + shadcn/ui |
+| Animation | framer-motion 12 |
+| Fonts | Imbue (headings), Victor Mono (body) |
+| Pipeline | Figma → Framelink MCP → custom extraction script |
 
-## Deploy on Vercel
+No backend, no database, no API.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Scripts
+
+| Command | Action |
+|---|---|
+| `npm run dev` | Dev server (Turbopack) |
+| `npm run build` | Production build + type check |
+| `npm run start` | Serve production build |
+| `npm run lint` | ESLint |
+
+---
+
+## Key Details
+
+- **Auto-generated tokens** — 73% of the codebase is generated data (20,838-line token file)
+- **Animated counters** — Stat numbers use `requestAnimationFrame` with cubic ease-out
+- **Agenda tabs** — framer-motion `layoutId` for animated pill transitions
+- **Accessibility** — Respects `prefers-reduced-motion`, uses `aria-*` attributes
+
+---
+
+Built by [2:47 PM Studio](https://247pm.studio)

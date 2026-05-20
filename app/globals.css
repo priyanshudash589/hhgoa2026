@@ -55,7 +55,7 @@
 }
 
 :root {
-  --background: #000000;
+  --background: #0b6839;
   --foreground: #ffffff;
   --card: #0b6839;
   --card-foreground: #ffffff;
@@ -95,7 +95,7 @@
     outline-color: color-mix(in oklch, var(--ring) 50%, transparent);
   }
   body {
-    background-color: #0B6839;
+    background-color: var(--background);
     color: #ffffff;
     font-family: var(--font-victor-mono);
   }
@@ -294,7 +294,22 @@
 
 .cta-button-glow {
   animation: ctaGlow 3s ease-in-out infinite;
-  animation-delay: 1.5s;
+  animation-delay: 0s; /* make glow start immediately */
+  transition: transform 60ms linear, filter 60ms linear; /* fast hover response fallback */
+}
+
+/* Fast CSS hover for critical CTA to eliminate JS animation lag */
+.fast-cta {
+  transition: transform 40ms linear, filter 40ms linear;
+  will-change: transform;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+.fast-cta:hover {
+  transform: scale(1.06);
+}
+.fast-cta:active {
+  transform: scale(0.98);
 }
 
 /* Global interactive element transitions */

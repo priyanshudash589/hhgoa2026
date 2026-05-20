@@ -46,9 +46,6 @@ const rasterLayerMap = {
   "54:426": { src: "/assets/Hacker house.png", alt: "Hacker house", width: 1148, height: 237 },
   "54:3471": { src: "/assets/details.png", alt: "", width: 1440, height: 937 },
   "54:3480": { src: "/assets/agenda.png", alt: "", width: 1440, height: 872 },
-  "54:3935": { src: "/assets/people row.png", alt: "People at HH Goa", width: 1282, height: 242 },
-  "54:17605": { src: "/assets/people row.png", alt: "People at HH Goa", width: 1282, height: 242 },
-  "54:22178": { src: "/assets/people row.png", alt: "People at HH Goa", width: 1282, height: 242 },
   "54:433": { src: "/assets/tracks.png", alt: "Tracks", width: 1440, height: 1160 },
   "54:8508": { src: "/assets/team.png", alt: "Friends at HH Goa", width: 1282, height: 966 },
   "54:26751": { src: "/assets/sponsor.png", alt: "Sponsors", width: 1440, height: 1236 },
@@ -444,21 +441,36 @@ const boxStyleFor = (node: FigmaNode, viewportWidth: number): React.CSSPropertie
   return applyStyleOverride(node, style, "box", viewportWidth);
 };
 
-const textStyleFor = (node: FigmaNode, viewportWidth: number): React.CSSProperties =>
-  applyStyleOverride(
-    node,
-    {
-      ...baseStyleFor(node),
-      ...fillToTextStyle(node.fills),
-      ...strokeToStyle(node.strokes, node.strokeWeight),
-      ...textStyleToStyle(node.textStyle),
-      margin: 0,
-      overflow: "visible",
-      whiteSpace: "pre-line",
-    },
-    "text",
-    viewportWidth,
-  );
+// IDs for the directional sign / statistic texts (numbers + labels)
+const SIGN_TEXT_IDS = new Set([
+  "54:3472",
+  "54:3473",
+  "54:3474",
+  "54:3475",
+  "54:3476",
+  "54:3477",
+  "54:3478",
+  "54:3479",
+]);
+
+const textStyleFor = (node: FigmaNode, viewportWidth: number): React.CSSProperties => {
+  const base = {
+    ...baseStyleFor(node),
+    ...fillToTextStyle(node.fills),
+    ...strokeToStyle(node.strokes, node.strokeWeight),
+    ...textStyleToStyle(node.textStyle),
+    margin: 0,
+    overflow: "visible",
+    whiteSpace: "pre-line",
+  } as React.CSSProperties;
+
+  if (SIGN_TEXT_IDS.has(node.id)) {
+    base.fontWeight = 700;
+    base.WebkitFontSmoothing = "antialiased";
+  }
+
+  return applyStyleOverride(node, base, "text", viewportWidth);
+};
 
 const rasterStyleFor = (
   node: FigmaNode,
@@ -838,7 +850,7 @@ function FigmaButtonLayer({
         style={boxStyleFor(node, viewportWidth)}
         whileHover={reduceMotion ? {} : { scale: 1.05 }}
         whileTap={reduceMotion ? {} : { scale: 0.96 }}
-        transition={{ duration: 0.2, ease: SMOOTH_EASE }}
+        transition={{ duration: 0.06, ease: SMOOTH_EASE }}
         {...motionFor(node, depth, reduceMotion)}
       >
         {borderlessChildren.map((child) => (
@@ -867,7 +879,7 @@ function FigmaButtonLayer({
         style={boxStyleFor(node, viewportWidth)}
         whileHover={reduceMotion ? {} : { scale: 1.04 }}
         whileTap={reduceMotion ? {} : { scale: 0.97 }}
-        transition={{ duration: 0.2, ease: SMOOTH_EASE }}
+        transition={{ duration: 0.06, ease: SMOOTH_EASE }}
         {...motionFor(node, depth, reduceMotion)}
       >
         {borderlessChildren.map((child) => (
@@ -892,11 +904,8 @@ function FigmaButtonLayer({
         target="_blank"
         rel="noopener noreferrer"
         aria-label={findText(node) ?? "Apply to hacker house"}
-        className="cta-button-glow block overflow-hidden rounded-none border-0 bg-transparent p-0 hover:opacity-100 cursor-pointer"
+        className="cta-button-glow fast-cta block overflow-hidden rounded-none border-0 bg-transparent p-0 hover:opacity-100 cursor-pointer"
         style={boxStyleFor(node, viewportWidth)}
-        whileHover={reduceMotion ? {} : { scale: 1.06 }}
-        whileTap={reduceMotion ? {} : { scale: 0.96 }}
-        transition={{ duration: 0.2, ease: SMOOTH_EASE }}
         {...motionFor(node, depth, reduceMotion)}
       >
         {borderlessChildren.map((child) => (
@@ -922,7 +931,7 @@ function FigmaButtonLayer({
       style={boxStyleFor(node, viewportWidth)}
       whileHover={reduceMotion ? {} : { scale: 1.06 }}
       whileTap={reduceMotion ? {} : { scale: 0.96 }}
-      transition={{ duration: 0.2, ease: SMOOTH_EASE }}
+      transition={{ duration: 0.06, ease: SMOOTH_EASE }}
       {...motionFor(node, depth, reduceMotion)}
     >
       {borderlessChildren.map((child) => (
@@ -1368,6 +1377,182 @@ function FigmaTracksSectionLayer({
   );
 }
 
+interface TeamMember {
+  id: string;
+  name: string;
+  role: string;
+  image: string;
+}
+
+const TEAM_MEMBERS: TeamMember[] = [
+  // Row 1 (6 members)
+  { id: "p1", name: "PRAYASHU", role: "2:47 PM Studio", image: "/assets/people card.png" },
+  { id: "p2", name: "PRAYASHU", role: "2:47 PM Studio", image: "/assets/people card.png" },
+  { id: "p3", name: "PRAYASHU", role: "2:47 PM Studio", image: "/assets/people card.png" },
+  { id: "p4", name: "PRAYASHU", role: "2:47 PM Studio", image: "/assets/people card.png" },
+  { id: "p5", name: "PRAYASHU", role: "2:47 PM Studio", image: "/assets/people card.png" },
+  { id: "p6", name: "PRAYASHU", role: "2:47 PM Studio", image: "/assets/people card.png" },
+  // Row 2 (6 members)
+  { id: "p7", name: "PRAYASHU", role: "2:47 PM Studio", image: "/assets/people card.png" },
+  { id: "p8", name: "PRAYASHU", role: "2:47 PM Studio", image: "/assets/people card.png" },
+  { id: "p9", name: "PRAYASHU", role: "2:47 PM Studio", image: "/assets/people card.png" },
+  { id: "p10", name: "PRAYASHU", role: "2:47 PM Studio", image: "/assets/people card.png" },
+  { id: "p11", name: "PRAYASHU", role: "2:47 PM Studio", image: "/assets/people card.png" },
+  { id: "p12", name: "PRAYASHU", role: "2:47 PM Studio", image: "/assets/people card.png" },
+  // Row 3 (6 members)
+  { id: "p13", name: "PRAYASHU", role: "2:47 PM Studio", image: "/assets/people card.png" },
+  { id: "p14", name: "PRAYASHU", role: "2:47 PM Studio", image: "/assets/people card.png" },
+  { id: "p15", name: "PRAYASHU", role: "2:47 PM Studio", image: "/assets/people card.png" },
+  { id: "p16", name: "PRAYASHU", role: "2:47 PM Studio", image: "/assets/people card.png" },
+  { id: "p17", name: "PRAYASHU", role: "2:47 PM Studio", image: "/assets/people card.png" },
+  { id: "p18", name: "PRAYASHU", role: "2:47 PM Studio", image: "/assets/people card.png" },
+];
+
+function FigmaPeopleCard({
+  member,
+  index,
+}: {
+  member: TeamMember;
+  index: number;
+}) {
+  const reduceMotion = useReducedMotion() ?? false;
+  
+  // Card layout: 197px width
+  const cardStyle: React.CSSProperties = {
+    width: "197px",
+    display: "flex",
+    flexDirection: "column",
+    gap: "12px",
+    flexShrink: 0,
+  };
+
+  // Yellow image box container (197x197px)
+  const imageBoxStyle: React.CSSProperties = {
+    position: "relative",
+    width: "197px",
+    height: "197px",
+    background: "var(--secondary)",
+    overflow: "hidden",
+  };
+
+  const topBorderSrc = "/assets/037-frame-1948754909-54-3938.svg";
+  const bottomBorderSrc = "/assets/038-frame-1948754910-54-4316.svg";
+
+  return (
+    <motion.div
+      style={cardStyle}
+      initial={reduceMotion ? false : { opacity: 0, y: 24, scale: 0.95 }}
+      whileInView={{ opacity: 1, y: 0, scale: 1 }}
+      viewport={{ once: true, amount: 0.2 }}
+      whileHover={reduceMotion ? {} : { scale: 1.05, y: -6 }}
+      transition={{
+        scale: { duration: 0.2, ease: "easeOut" },
+        y: { duration: 0.2, ease: "easeOut" },
+        default: { duration: 0.5, delay: index * 0.05, ease: SMOOTH_EASE }
+      }}
+      whileTap={reduceMotion ? {} : { scale: 0.98 }}
+      className="group cursor-pointer"
+    >
+      <div style={imageBoxStyle}>
+        {/* Render person photo cutout with smooth grayscale hover transition */}
+        <motion.img
+          src={member.image}
+          alt={member.name}
+          className="absolute inset-0 w-full h-full object-cover"
+          variants={{
+            initial: { filter: "grayscale(100%) contrast(1.1)" },
+            hover: { filter: "grayscale(0%) contrast(1.0)" }
+          }}
+          initial="initial"
+          animate="initial"
+          transition={{ duration: 0.3, ease: "easeOut" }}
+        />
+
+        {/* Top borders */}
+        <img
+          src={topBorderSrc}
+          alt=""
+          className="absolute top-0 left-0 w-full h-[19px] object-cover pointer-events-none z-10"
+        />
+
+        {/* Bottom borders */}
+        <img
+          src={bottomBorderSrc}
+          alt=""
+          className="absolute bottom-0 left-0 w-full h-[19px] object-cover pointer-events-none z-10"
+        />
+      </div>
+
+      {/* Name and Role */}
+      <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+        <p
+          style={{
+            ...textStyleToStyle("style_SNJMYL"),
+            ...fillToTextStyle("fill_3YOX9I"),
+            margin: 0,
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+          }}
+        >
+          {member.name}
+        </p>
+        <p
+          style={{
+            ...textStyleToStyle("style_8FXD08"),
+            ...fillToTextStyle("fill_3YOX9I"),
+            margin: 0,
+            opacity: 0.8,
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+          }}
+        >
+          {member.role}
+        </p>
+      </div>
+    </motion.div>
+  );
+}
+
+function FigmaPeopleRowLayer({
+  node,
+  depth,
+  viewportWidth,
+}: {
+  node: FigmaNode;
+  depth: number;
+  viewportWidth: number;
+}) {
+  const reduceMotion = useReducedMotion() ?? false;
+
+  let sliceStart = 0;
+  if (node.id === "54:17605") sliceStart = 6;
+  if (node.id === "54:22178") sliceStart = 12;
+  const rowMembers = TEAM_MEMBERS.slice(sliceStart, sliceStart + 6);
+
+  const rowStyle: React.CSSProperties = {
+    ...boxStyleFor(node, viewportWidth),
+    display: "flex",
+    flexDirection: "row",
+    gap: "28px",
+    alignItems: "center",
+    background: "transparent",
+  };
+
+  return (
+    <motion.div style={rowStyle} {...motionFor(node, depth, reduceMotion)}>
+      {rowMembers.map((member, i) => (
+        <FigmaPeopleCard
+          key={member.id}
+          member={member}
+          index={i}
+        />
+      ))}
+    </motion.div>
+  );
+}
+
 function FigmaLayer({
   node,
   depth,
@@ -1380,6 +1565,11 @@ function FigmaLayer({
   faqCardId?: string;
 }) {
   const reduceMotion = useReducedMotion() ?? false;
+
+  if (PEOPLE_ROW_IDS.has(node.id)) {
+    return <FigmaPeopleRowLayer node={node} depth={depth} viewportWidth={viewportWidth} />;
+  }
+
   const rasterLayer = rasterLayerMap[node.id as keyof typeof rasterLayerMap];
   if (rasterLayer) {
     if (node.id === "54:27763") {
