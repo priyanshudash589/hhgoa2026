@@ -245,6 +245,21 @@ const styleOverrideFor = (
   const isCompact = viewportWidth < 1280;
   const isNarrow = viewportWidth < 920;
 
+  // HH Goa logo — strip pink fill from Figma so the transparent SVG shows through
+  if (node.id === "54:4" && mode === "box") {
+    return { background: "none" };
+  }
+
+  // गोवा badge — same treatment
+  if (node.id === "54:427" && mode === "box") {
+    return { background: "none" };
+  }
+
+  // Footer logo Vector — strip pink fill so transparent SVG shows through
+  if (node.id === "54:30944" && mode === "box") {
+    return { background: "none", backgroundColor: "transparent" };
+  }
+
   // Nav links frame — shift left and tighten gap to prevent overlapping the Apply button
   if (node.id === "54:5" && mode === "box") {
     return {
