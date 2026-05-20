@@ -76,6 +76,7 @@ const HERO_BUTTON_EXTENSION_IDS = new Set(["54:116", "54:168"]);
 const DEVFOLIO_BUTTON_EXTENSION_IDS = new Set(["54:27453", "54:27505"]);
 const BUTTON_TOP_BORDER_SEGMENT_IDS = new Set(["54:14", "54:65", "54:26843", "54:26894", "54:27351", "54:27402"]);
 const BUTTON_BOTTOM_BORDER_SEGMENT_IDS = new Set(["54:324", "54:375", "54:27153", "54:27204", "54:27661", "54:27712"]);
+const BUTTON_CORNER_SEGMENT_IDS = new Set(["54:220", "54:272", "54:27049", "54:27101", "54:27557", "54:27609"]);
 const BUTTON_EXTENSION_IDS_BY_FRAME: Readonly<Record<string, ReadonlySet<string>>> = {
   [HERO_BUTTON_ID]: HERO_BUTTON_EXTENSION_IDS,
   [VENUE_BUTTON_ID]: VENUE_BUTTON_EXTENSION_IDS,
@@ -102,15 +103,35 @@ const INSIDE_ROOM_DAY_CARD_BODY_IDS = new Set([
   "54:3891",
   "54:3895",
   "54:3899",
-  "54:3904",
+  "54:3903",
   "54:3908",
   "54:3912",
   "54:3916",
-  "54:3921",
+  "54:3920",
   "54:3925",
   "54:3929",
   "54:3933",
 ]);
+
+const NAV_LINKS: Record<string, string> = {
+  "54:6": "#about",
+  "54:7": "#agenda",
+  "54:8": "#tracks",
+  "54:9": "#bounties",
+  "54:10": "#team",
+  "54:11": "#venue",
+  "54:13": "https://hacker-house-goa-2026.devfolio.co/", // CTA link
+};
+
+const SECTION_IDS: Record<string, string> = {
+  "54:426": "about",
+  "54:30922": "agenda",
+  "54:433": "tracks",
+  "54:27763": "bounties",
+  "54:8508": "team",
+  "54:26834": "venue",
+};
+
 const FAQ_CARD_ID_ORDER = ["54:27256", "54:27278", "54:27294", "54:27310", "54:27326"] as const;
 const FAQ_CARD_IDS: ReadonlySet<string> = new Set(FAQ_CARD_ID_ORDER);
 const FAQ_STRIP_NODE_IDS = new Set(["54:27257", "54:27273", "54:27289", "54:27305", "54:27321", "54:27337"]);
@@ -495,6 +516,7 @@ function FigmaRasterLayer({
 
   return (
     <motion.img
+      id={SECTION_IDS[node.id]}
       src={layer.src}
       alt={layer.alt}
       aria-hidden={layer.alt ? undefined : true}
@@ -554,7 +576,7 @@ function FigmaButtonLayer({
   const extensionIds = BUTTON_EXTENSION_IDS_BY_FRAME[node.id];
   const visibleChildren = extensionIds ? children.filter((child) => !extensionIds.has(child.id)) : children;
   const borderlessChildren = visibleChildren.filter(
-    (child) => !BUTTON_TOP_BORDER_SEGMENT_IDS.has(child.id) && !BUTTON_BOTTOM_BORDER_SEGMENT_IDS.has(child.id),
+    (child) => !BUTTON_TOP_BORDER_SEGMENT_IDS.has(child.id) && !BUTTON_BOTTOM_BORDER_SEGMENT_IDS.has(child.id) && !BUTTON_CORNER_SEGMENT_IDS.has(child.id),
   );
   const topBorderTileSrc = getFigmaAsset(BUTTON_TOP_BORDER_TILE_NODE_BY_FRAME[node.id] ?? "");
   const bottomBorderTileSrc = getFigmaAsset(BUTTON_BOTTOM_BORDER_TILE_NODE_BY_FRAME[node.id] ?? "");
@@ -618,6 +640,32 @@ function FigmaButtonLayer({
         {topBorderOverlay}
         {bottomBorderOverlay}
       </motion.button>
+    );
+  }
+
+  if (node.id === DEVFOLIO_BUTTON_ID) {
+    return (
+      <motion.a
+        href="https://hacker-house-goa-2026.devfolio.co/"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label={findText(node) ?? "Go to Devfolio"}
+        className="block overflow-hidden rounded-none border-0 bg-transparent p-0 hover:opacity-100 cursor-pointer"
+        style={boxStyleFor(node, viewportWidth)}
+        {...motionFor(node, depth, reduceMotion)}
+      >
+        {borderlessChildren.map((child) => (
+          <FigmaLayer
+            key={child.id}
+            node={child}
+            depth={depth + 1}
+            viewportWidth={viewportWidth}
+            faqCardId={faqCardId}
+          />
+        ))}
+        {topBorderOverlay}
+        {bottomBorderOverlay}
+      </motion.a>
     );
   }
 
@@ -811,7 +859,7 @@ function FigmaAgendaSectionLayer({
   };
 
   return (
-    <motion.div style={boxStyleFor(node, viewportWidth)} {...motionFor(node, depth, reduceMotion)}>
+    <motion.div id={SECTION_IDS[node.id]} style={boxStyleFor(node, viewportWidth)} {...motionFor(node, depth, reduceMotion)}>
       {children
         .filter((child) => child.id === AGENDA_BACKGROUND_ASSET_ID || child.id === AGENDA_OBJECTS_ASSET_ID)
         .map((child) => (
@@ -921,6 +969,106 @@ function FigmaAgendaSectionLayer({
   );
 }
 
+const BOUNTIES = Array(9).fill({ sponsor: "nillion", amount: "$2000" });
+
+function BountiesDivider() {
+  return (
+    <div style={{ width: "100%", height: "14px", position: "relative" }}>
+      <div style={{ position: "absolute", top: "0", left: "0", width: "100%", height: "3px", background: "#FFFFFF" }} />
+      <svg width="100%" height="6" style={{ position: "absolute", top: "6px", left: "0" }} preserveAspectRatio="none">
+        <defs>
+          <pattern id="bounty-triangles" x="0" y="0" width="16" height="6" patternUnits="userSpaceOnUse">
+            <polygon points="0,0 16,0 8,6" fill="#FFFFFF" />
+          </pattern>
+        </defs>
+        <rect x="0" y="0" width="100%" height="100%" fill="url(#bounty-triangles)" />
+      </svg>
+    </div>
+  );
+}
+
+function FigmaBountiesSectionLayer({
+  node,
+  depth,
+  viewportWidth,
+}: {
+  node: FigmaNode;
+  depth: number;
+  viewportWidth: number;
+}) {
+  const reduceMotion = useReducedMotion() ?? false;
+  return (
+    <motion.div id={SECTION_IDS[node.id]} style={{ ...boxStyleFor(node, viewportWidth), background: "#FF0080" }} {...motionFor(node, depth, reduceMotion)}>
+      <div style={{ display: "flex", flexDirection: "column", width: "100%", height: "100%", justifyContent: "center", padding: "0 80px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "40px", rowGap: "80px" }}>
+          {BOUNTIES.map((bounty, i) => (
+            <div key={i} style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+              <BountiesDivider />
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", color: "#FFFFFF" }}>
+                <span className="font-sans font-bold" style={{ fontSize: "42px", letterSpacing: "-1px" }}>{bounty.sponsor}</span>
+                <span className="font-heading" style={{ fontSize: "64px", letterSpacing: "1px" }}>{bounty.amount}</span>
+              </div>
+              <BountiesDivider />
+            </div>
+          ))}
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+const TRACKS = Array(4).fill({
+  title: "Privacy",
+  description: "Lorem Ipsum Is Simply Dummy Text Of The Printing And Typesetting Industry. Lorem Ipsum Has Been The Industry's Standard Dummy Text Ever Since The 1500s, When An Unknown Printer Took A Galley Of Type And Scrambled It To Make A Type Specimen Book. It Has Survived Not Only Five Centuries",
+});
+
+function TracksDivider() {
+  return (
+    <div style={{ width: "100%", height: "24px", position: "relative", background: "#FF0080" }}>
+      <svg width="100%" height="24" preserveAspectRatio="none">
+        <defs>
+          <pattern id="tracks-floral" x="0" y="0" width="24" height="24" patternUnits="userSpaceOnUse">
+            <rect width="24" height="24" fill="#0B6839" />
+            <circle cx="12" cy="12" r="4" fill="#FF0080" />
+            <polygon points="12,2 14,8 20,12 14,16 12,22 10,16 4,12 10,8" fill="#FEE101" />
+          </pattern>
+        </defs>
+        <rect x="0" y="0" width="100%" height="100%" fill="url(#tracks-floral)" />
+      </svg>
+    </div>
+  );
+}
+
+function FigmaTracksSectionLayer({
+  node,
+  depth,
+  viewportWidth,
+}: {
+  node: FigmaNode;
+  depth: number;
+  viewportWidth: number;
+}) {
+  const reduceMotion = useReducedMotion() ?? false;
+  return (
+    <motion.div id={SECTION_IDS[node.id]} style={{ ...boxStyleFor(node, viewportWidth), background: "#FEE101" }} {...motionFor(node, depth, reduceMotion)}>
+      <div style={{ display: "flex", flexDirection: "column", width: "100%", height: "100%", justifyContent: "center", padding: "80px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "40px" }}>
+          {TRACKS.map((track, i) => (
+            <div key={i} style={{ background: "#0B6839", display: "flex", flexDirection: "column" }}>
+              <TracksDivider />
+              <div style={{ padding: "40px", display: "flex", flexDirection: "column", gap: "24px", flex: 1 }}>
+                <h3 className="font-heading" style={{ color: "#FFFFFF", fontSize: "72px", lineHeight: 1, margin: 0 }}>{track.title}</h3>
+                <p className="font-sans" style={{ color: "#FFFFFF", fontSize: "24px", lineHeight: 1.4, margin: 0 }}>{track.description}</p>
+              </div>
+              <TracksDivider />
+            </div>
+          ))}
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
 function FigmaLayer({
   node,
   depth,
@@ -935,6 +1083,9 @@ function FigmaLayer({
   const reduceMotion = useReducedMotion() ?? false;
   const rasterLayer = rasterLayerMap[node.id as keyof typeof rasterLayerMap];
   if (rasterLayer) {
+    if (node.id === "54:27763") {
+      return <FigmaBountiesSectionLayer node={node} depth={depth} viewportWidth={viewportWidth} />;
+    }
     return (
       <FigmaRasterLayer
         node={node}
@@ -948,6 +1099,20 @@ function FigmaLayer({
   if (node.type === "TEXT") {
     const hasFaqPlaceholderText = faqCardId ? /lorem\s+ipsum/i.test(node.text ?? "") : false;
     const faqTextOverride = hasFaqPlaceholderText || (faqCardId && node.id === "54:27265") ? "" : undefined;
+    
+    const href = NAV_LINKS[node.id];
+    if (href) {
+      return (
+        <motion.a 
+          href={href} 
+          style={{ ...textStyleFor(node, viewportWidth), textDecoration: "none", cursor: "pointer" }} 
+          {...motionFor(node, depth, reduceMotion)}
+        >
+          {faqTextOverride ?? node.text ?? ""}
+        </motion.a>
+      );
+    }
+
     return (
       <motion.p style={textStyleFor(node, viewportWidth)} {...motionFor(node, depth, reduceMotion)}>
         {faqTextOverride ?? node.text ?? ""}
@@ -1001,7 +1166,7 @@ export function FigmaHomeRenderer() {
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
-  const scale = useMemo(() => Math.min(1, viewportWidth / FIGMA_WIDTH), [viewportWidth]);
+  const scale = useMemo(() => viewportWidth / FIGMA_WIDTH, [viewportWidth]);
   const toggleFaqCard = useCallback((id: string) => {
     setOpenFaqCardId((current) => (current === id ? null : id));
   }, []);

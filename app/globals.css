@@ -95,11 +95,12 @@
     outline-color: color-mix(in oklch, var(--ring) 50%, transparent);
   }
   body {
-    background-color: #000000;
+    background-color: #0B6839;
     color: #ffffff;
     font-family: var(--font-victor-mono);
   }
   html {
+    background-color: #0B6839;
     scroll-behavior: smooth;
   }
   ::selection {

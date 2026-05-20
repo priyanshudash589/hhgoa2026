@@ -32,7 +32,7 @@ export const figmaHomeTree = {
             "name": "page",
             "type": "TEXT",
             "layout": "layout_XM93Y8",
-            "text": "page",
+            "text": "ABOUT",
             "textStyle": "style_D4I45O",
             "fills": "fill_3YOX9I"
           },
@@ -41,7 +41,7 @@ export const figmaHomeTree = {
             "name": "page",
             "type": "TEXT",
             "layout": "layout_XM93Y8",
-            "text": "page",
+            "text": "AGENDA",
             "textStyle": "style_D4I45O",
             "fills": "fill_3YOX9I"
           },
@@ -50,7 +50,7 @@ export const figmaHomeTree = {
             "name": "page",
             "type": "TEXT",
             "layout": "layout_XM93Y8",
-            "text": "page",
+            "text": "TRACKS",
             "textStyle": "style_D4I45O",
             "fills": "fill_3YOX9I"
           },
@@ -59,7 +59,7 @@ export const figmaHomeTree = {
             "name": "page",
             "type": "TEXT",
             "layout": "layout_XM93Y8",
-            "text": "page",
+            "text": "BOUNTIES",
             "textStyle": "style_D4I45O",
             "fills": "fill_3YOX9I"
           },
@@ -68,7 +68,7 @@ export const figmaHomeTree = {
             "name": "page",
             "type": "TEXT",
             "layout": "layout_XM93Y8",
-            "text": "page",
+            "text": "TEAM",
             "textStyle": "style_D4I45O",
             "fills": "fill_3YOX9I"
           },
@@ -77,7 +77,7 @@ export const figmaHomeTree = {
             "name": "page",
             "type": "TEXT",
             "layout": "layout_XM93Y8",
-            "text": "page",
+            "text": "VENUE",
             "textStyle": "style_D4I45O",
             "fills": "fill_3YOX9I"
           }
@@ -95,7 +95,7 @@ export const figmaHomeTree = {
             "name": "CTA",
             "type": "TEXT",
             "layout": "layout_0FWOYX",
-            "text": "CTA",
+            "text": "APPLY",
             "textStyle": "style_6JXURI",
             "fills": "fill_6WIVV4"
           },
@@ -164,7 +164,6 @@ export const figmaHomeTree = {
         "name": "gaaevaa",
         "type": "IMAGE-SVG",
         "layout": "layout_W7VQSW",
-        "fills": "fill_GYGAPM",
         "strokes": "fill_Z3B55F",
         "strokeWeight": "13.11605453491211px"
       },

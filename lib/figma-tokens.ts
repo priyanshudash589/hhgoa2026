@@ -1931,11 +1931,11 @@ export const figmaTokens = {
       "mode": "none",
       "sizing": {},
       "locationRelativeToParent": {
-        "x": 139,
+        "x": 90,
         "y": 513
       },
       "dimensions": {
-        "width": 403,
+        "width": 500,
         "height": 18
       }
     },
@@ -1943,11 +1943,11 @@ export const figmaTokens = {
       "mode": "none",
       "sizing": {},
       "locationRelativeToParent": {
-        "x": 1119,
+        "x": 1085,
         "y": 513
       },
       "dimensions": {
-        "width": 182,
+        "width": 250,
         "height": 18
       }
     },
@@ -19306,11 +19306,11 @@ export const figmaTokens = {
       "mode": "none",
       "sizing": {},
       "locationRelativeToParent": {
-        "x": 575,
+        "x": 470,
         "y": 15595
       },
       "dimensions": {
-        "width": 291,
+        "width": 500,
         "height": 13
       }
     },
@@ -19318,11 +19318,11 @@ export const figmaTokens = {
       "mode": "none",
       "sizing": {},
       "locationRelativeToParent": {
-        "x": 575,
+        "x": 470,
         "y": 15622
       },
       "dimensions": {
-        "width": 291,
+        "width": 500,
         "height": 13
       }
     },
@@ -19334,7 +19334,7 @@ export const figmaTokens = {
         "y": 15817
       },
       "dimensions": {
-        "width": 318,
+        "width": 400,
         "height": 13
       }
     },
@@ -19346,7 +19346,7 @@ export const figmaTokens = {
         "y": 15726
       },
       "dimensions": {
-        "width": 82,
+        "width": 200,
         "height": 13
       }
     },
@@ -19358,7 +19358,7 @@ export const figmaTokens = {
         "y": 15751
       },
       "dimensions": {
-        "width": 155,
+        "width": 200,
         "height": 13
       }
     },
@@ -19788,7 +19788,7 @@ export const figmaTokens = {
       "lineHeight": "0.8399999591776138em",
       "letterSpacing": "-3%",
       "textCase": "UPPER",
-      "textAlignHorizontal": "CENTER",
+      "textAlignHorizontal": "LEFT",
       "textAlignVertical": "CENTER"
     },
     "style_WNXBCS": {
