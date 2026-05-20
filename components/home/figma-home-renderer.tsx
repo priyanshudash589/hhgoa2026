@@ -191,7 +191,7 @@ const faqAnswerTextByCardId = Object.fromEntries(
 ) as Record<string, string>;
 
 const HACKERS_TEXT_OVERRIDES: Record<string, string> = {
-  "54:27344": "Less Noise. More Signal",
+  "54:27344": "Less Noise.\nMore Signal",
   "54:27347":
     "Most hackathons are just hype and no substance. We're changing that. From October 28–31, we're taking over Goa for the country's biggest build-station.",
   "54:27348":
