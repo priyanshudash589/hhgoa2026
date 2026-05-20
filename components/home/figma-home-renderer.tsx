@@ -120,6 +120,14 @@ const NAV_LINKS: Record<string, string> = {
   "54:13": "https://hacker-house-goa-2026.devfolio.co/", // CTA link
 };
 
+const HIDDEN_NODE_IDS = new Set([
+  "54:433",    // Tracks section (includes "PTRacksGOA" heading)
+  "54:26751",  // Sponsors
+  "54:8508",   // Team / Friends @HH
+  "54:27763",  // Bounties
+  "54:29998",  // Agenda
+]);
+
 const SECTION_IDS: Record<string, string> = {
   "54:426": "about",
   "54:30922": "agenda",
@@ -1588,6 +1596,8 @@ function FigmaLayer({
   faqCardId?: string;
 }) {
   const reduceMotion = useReducedMotion() ?? false;
+
+  if (HIDDEN_NODE_IDS.has(node.id)) return null;
 
   if (PEOPLE_ROW_IDS.has(node.id)) {
     return <FigmaPeopleRowLayer node={node} depth={depth} viewportWidth={viewportWidth} />;
