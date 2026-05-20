@@ -1,8 +1,7 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { Button } from "@/components/ui/button";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { AnimatePresence, motion, useInView, useReducedMotion } from "framer-motion";
 import { figmaHomeTree } from "@/lib/figma-home-tree";
 import { getFigmaAsset } from "@/lib/figma-assets";
 import {
@@ -92,6 +91,7 @@ const BUTTON_BOTTOM_BORDER_TILE_NODE_BY_FRAME: Readonly<Record<string, string>> 
   [VENUE_BUTTON_ID]: "54:27153",
   [DEVFOLIO_BUTTON_ID]: "54:27661",
 };
+const HERO_BUTTON_TEXT_ID = "54:13";
 const DEVFOLIO_BUTTON_TEXT_ID = "54:27350";
 const INSIDE_ROOM_DAY_HEADING_IDS = new Set(["54:3862", "54:3863", "54:3864", "54:3865"]);
 const INSIDE_ROOM_DAY_CARD_BODY_IDS = new Set([
@@ -248,6 +248,14 @@ const styleOverrideFor = (
   const isCompact = viewportWidth < 1280;
   const isNarrow = viewportWidth < 920;
 
+  // Nav links frame — shift left and tighten gap to prevent overlapping the Apply button
+  if (node.id === "54:5" && mode === "box") {
+    return {
+      left: "540px",
+      gap: "24px",
+    };
+  }
+
   if (node.id === INSIDE_ROOM_SCENE_ID && mode === "raster") {
     return {
       left: "0px",
@@ -367,6 +375,20 @@ const styleOverrideFor = (
     };
   }
 
+  if (node.id === HERO_BUTTON_TEXT_ID && mode === "text") {
+    return {
+      left: "0",
+      top: "0",
+      width: "100%",
+      height: "100%",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      textAlign: "center",
+      whiteSpace: "nowrap",
+    };
+  }
+
   if (node.id === VENUE_BUTTON_TEXT_ID && mode === "text") {
     return {
       whiteSpace: "nowrap",
@@ -469,9 +491,36 @@ const HERO_NODE_IDS = new Set([
   "54:430", // YouTube video frame
 ]);
 
+// Animation group IDs for targeted scroll transitions
+const STAT_NUMBER_IDS = new Set(["54:3472", "54:3473", "54:3474", "54:3475"]);
+const STAT_LABEL_IDS = new Set(["54:3476", "54:3477", "54:3478", "54:3479"]);
+const PEOPLE_ROW_IDS = new Set(["54:3935", "54:17605", "54:22178"]);
+const CONTENT_RASTER_IDS = new Set(["54:8508", "54:26751", "54:27342", "54:30943"]);
+
+const SMOOTH_EASE = [0.22, 1, 0.36, 1] as const;
+const SPRING_EASE = [0.16, 1, 0.3, 1] as const;
+
+// Staggered hero entrance — each element has a cascading delay
+const HERO_STAGGER_DELAYS: Readonly<Record<string, number>> = {
+  "54:3": 0,        // Sun rise bg
+  "54:4": 0.08,     // Logo
+  "54:5": 0.18,     // Nav links
+  "54:426": 0.12,   // Hacker house text
+  "54:428": 0.28,   // GOA, INDIA text
+  "54:429": 0.35,   // 2:47 pm Studio
+  "54:430": 0.42,   // YouTube video
+  "54:12": 0.5,     // CTA button (last — draws eye)
+};
+
+// FAQ cards — stagger by position
+const FAQ_CARD_STAGGER_DELAYS: Readonly<Record<string, number>> = Object.fromEntries(
+  FAQ_CARD_ID_ORDER.map((id, i) => [id, i * 0.1]),
+);
+
 const motionFor = (node: FigmaNode, depth: number, reduceMotion: boolean) => {
   if (reduceMotion) return {};
 
+  // गोवा badge — perpetual float
   if (node.id === "54:427") {
     return {
       initial: { opacity: 1 },
@@ -480,26 +529,187 @@ const motionFor = (node: FigmaNode, depth: number, reduceMotion: boolean) => {
     };
   }
 
-  // Hero nodes are above the fold — animate in immediately, not on scroll
+  // Hero nodes — staggered entrance on page load
   if (HERO_NODE_IDS.has(node.id)) {
+    const delay = HERO_STAGGER_DELAYS[node.id] ?? 0;
     return {
-      initial: { opacity: 0, y: 16 },
-      animate: { opacity: 1, y: 0 },
-      transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] as const },
+      initial: { opacity: 0, y: 24, scale: 0.97 },
+      animate: { opacity: 1, y: 0, scale: 1 },
+      transition: {
+        duration: 0.7,
+        delay,
+        ease: SMOOTH_EASE,
+        scale: { duration: 0.8, delay, ease: SPRING_EASE },
+      },
     };
   }
 
+  // Stat numbers — dramatic scale pop-in
+  if (STAT_NUMBER_IDS.has(node.id)) {
+    return {
+      initial: { opacity: 0, scale: 0.5, y: 40 },
+      whileInView: { opacity: 1, scale: 1, y: 0 },
+      viewport: { once: true, amount: 0.3 },
+      transition: {
+        duration: 0.8,
+        ease: SPRING_EASE,
+        scale: { type: "spring" as const, stiffness: 180, damping: 14 },
+      },
+    };
+  }
+
+  // Stat labels — delayed fade-up after numbers
+  if (STAT_LABEL_IDS.has(node.id)) {
+    return {
+      initial: { opacity: 0, y: 16 },
+      whileInView: { opacity: 1, y: 0 },
+      viewport: { once: true, amount: 0.3 },
+      transition: { duration: 0.5, delay: 0.25, ease: SMOOTH_EASE },
+    };
+  }
+
+  // People row images — slide in from left
+  if (PEOPLE_ROW_IDS.has(node.id)) {
+    return {
+      initial: { opacity: 0, x: -60 },
+      whileInView: { opacity: 1, x: 0 },
+      viewport: { once: true, amount: 0.15 },
+      transition: { duration: 0.8, ease: SMOOTH_EASE },
+    };
+  }
+
+  // Content raster sections — scale-up reveal
+  if (CONTENT_RASTER_IDS.has(node.id)) {
+    return {
+      initial: { opacity: 0, scale: 0.94 },
+      whileInView: { opacity: 1, scale: 1 },
+      viewport: { once: true, amount: 0.1 },
+      transition: { duration: 0.9, ease: SMOOTH_EASE },
+    };
+  }
+
+  // Day headings — slide in from right
+  if (INSIDE_ROOM_DAY_HEADING_IDS.has(node.id)) {
+    return {
+      initial: { opacity: 0, x: 50 },
+      whileInView: { opacity: 1, x: 0 },
+      viewport: { once: true, amount: 0.3 },
+      transition: { duration: 0.65, ease: SMOOTH_EASE },
+    };
+  }
+
+  // "Inside the room" title frame — enhanced entrance with scale
+  if (node.id === INSIDE_ROOM_TITLE_FRAME_ID) {
+    return {
+      initial: { opacity: 0, y: 44, scale: 0.96 },
+      whileInView: { opacity: 1, y: 0, scale: 1 },
+      viewport: { once: true, amount: 0.15 },
+      transition: { duration: 0.75, ease: SMOOTH_EASE },
+    };
+  }
+
+  // FAQ cards — staggered entrance with scale
+  if (FAQ_CARD_IDS.has(node.id)) {
+    const faqDelay = FAQ_CARD_STAGGER_DELAYS[node.id] ?? 0;
+    return {
+      initial: { opacity: 0, y: 32, scale: 0.97 },
+      whileInView: { opacity: 1, y: 0, scale: 1 },
+      viewport: { once: true, amount: 0.1 },
+      transition: { duration: 0.6, delay: faqDelay, ease: SMOOTH_EASE },
+    };
+  }
+
+  // Day card body texts — subtle stagger from left
+  if (INSIDE_ROOM_DAY_CARD_BODY_IDS.has(node.id)) {
+    return {
+      initial: { opacity: 0, x: -20 },
+      whileInView: { opacity: 1, x: 0 },
+      viewport: { once: true, amount: 0.3 },
+      transition: { duration: 0.45, ease: SMOOTH_EASE },
+    };
+  }
+
+  // Top-level sections (depth ≤ 1) — standard reveal
   if (depth <= 1) {
     return {
       initial: { opacity: 0, y: 28 },
       whileInView: { opacity: 1, y: 0 },
       viewport: { once: true, amount: 0.12 },
-      transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] as const },
+      transition: { duration: 0.55, ease: SMOOTH_EASE },
+    };
+  }
+
+  // Depth 2 frames — subtle fade-up for inner content (day card items, etc.)
+  if (depth === 2 && node.type === "FRAME") {
+    return {
+      initial: { opacity: 0, y: 18 },
+      whileInView: { opacity: 1, y: 0 },
+      viewport: { once: true, amount: 0.15 },
+      transition: { duration: 0.45, ease: SMOOTH_EASE },
+    };
+  }
+
+  // Depth 3 text — very subtle fade
+  if (depth === 3 && node.type === "TEXT") {
+    return {
+      initial: { opacity: 0, y: 10 },
+      whileInView: { opacity: 1, y: 0 },
+      viewport: { once: true, amount: 0.2 },
+      transition: { duration: 0.4, ease: SMOOTH_EASE },
     };
   }
 
   return {};
 };
+
+// --- Animated counter for stat numbers ---
+function AnimatedCounter({
+  node,
+  depth,
+  viewportWidth,
+}: {
+  node: FigmaNode;
+  depth: number;
+  viewportWidth: number;
+}) {
+  const ref = useRef<HTMLParagraphElement>(null);
+  const isInView = useInView(ref, { once: true, amount: 0.5 });
+  const reduceMotion = useReducedMotion() ?? false;
+  const raw = node.text ?? "0";
+  const match = raw.match(/^([^0-9]*)(\d+)(.*)$/);
+  const prefix = match?.[1] ?? "";
+  const target = parseInt(match?.[2] ?? "0", 10);
+  const suffix = match?.[3] ?? "";
+  const [display, setDisplay] = useState(() => reduceMotion ? raw : `${prefix}0${suffix}`);
+
+  useEffect(() => {
+    if (!isInView || reduceMotion) return;
+    const duration = 1600;
+    const startTime = performance.now();
+    let frameId: number;
+
+    const tick = (now: number) => {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+      setDisplay(`${prefix}${Math.round(target * eased)}${suffix}`);
+      if (progress < 1) frameId = requestAnimationFrame(tick);
+    };
+
+    frameId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frameId);
+  }, [isInView, reduceMotion, raw, prefix, target, suffix]);
+
+  return (
+    <motion.p
+      ref={ref}
+      style={textStyleFor(node, viewportWidth)}
+      {...motionFor(node, depth, reduceMotion)}
+    >
+      {display}
+    </motion.p>
+  );
+}
 
 function FigmaRasterLayer({
   node,
@@ -624,8 +834,11 @@ function FigmaButtonLayer({
       <motion.button
         type="button"
         aria-label={findText(node) ?? "Call to action"}
-        className="appearance-none overflow-hidden rounded-none border-0 bg-transparent p-0"
+        className="appearance-none overflow-hidden rounded-none border-0 bg-transparent p-0 cursor-pointer"
         style={boxStyleFor(node, viewportWidth)}
+        whileHover={reduceMotion ? {} : { scale: 1.05 }}
+        whileTap={reduceMotion ? {} : { scale: 0.96 }}
+        transition={{ duration: 0.2, ease: SMOOTH_EASE }}
         {...motionFor(node, depth, reduceMotion)}
       >
         {borderlessChildren.map((child) => (
@@ -652,6 +865,38 @@ function FigmaButtonLayer({
         aria-label={findText(node) ?? "Go to Devfolio"}
         className="block overflow-hidden rounded-none border-0 bg-transparent p-0 hover:opacity-100 cursor-pointer"
         style={boxStyleFor(node, viewportWidth)}
+        whileHover={reduceMotion ? {} : { scale: 1.04 }}
+        whileTap={reduceMotion ? {} : { scale: 0.97 }}
+        transition={{ duration: 0.2, ease: SMOOTH_EASE }}
+        {...motionFor(node, depth, reduceMotion)}
+      >
+        {borderlessChildren.map((child) => (
+          <FigmaLayer
+            key={child.id}
+            node={child}
+            depth={depth + 1}
+            viewportWidth={viewportWidth}
+            faqCardId={faqCardId}
+          />
+        ))}
+        {topBorderOverlay}
+        {bottomBorderOverlay}
+      </motion.a>
+    );
+  }
+
+  if (node.id === HERO_BUTTON_ID) {
+    return (
+      <motion.a
+        href="https://hacker-house-goa-2026.devfolio.co/"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label={findText(node) ?? "Apply to hacker house"}
+        className="cta-button-glow block overflow-hidden rounded-none border-0 bg-transparent p-0 hover:opacity-100 cursor-pointer"
+        style={boxStyleFor(node, viewportWidth)}
+        whileHover={reduceMotion ? {} : { scale: 1.06 }}
+        whileTap={reduceMotion ? {} : { scale: 0.96 }}
+        transition={{ duration: 0.2, ease: SMOOTH_EASE }}
         {...motionFor(node, depth, reduceMotion)}
       >
         {borderlessChildren.map((child) => (
@@ -670,11 +915,14 @@ function FigmaButtonLayer({
   }
 
   return (
-    <Button
+    <motion.button
       type="button"
       aria-label={findText(node) ?? "Call to action"}
-      className="overflow-hidden rounded-none border-0 bg-transparent p-0 tracking-normal shadow-none hover:opacity-100"
+      className="cta-button-glow overflow-hidden rounded-none border-0 bg-transparent p-0 tracking-normal shadow-none hover:opacity-100 cursor-pointer"
       style={boxStyleFor(node, viewportWidth)}
+      whileHover={reduceMotion ? {} : { scale: 1.06 }}
+      whileTap={reduceMotion ? {} : { scale: 0.96 }}
+      transition={{ duration: 0.2, ease: SMOOTH_EASE }}
       {...motionFor(node, depth, reduceMotion)}
     >
       {borderlessChildren.map((child) => (
@@ -688,7 +936,7 @@ function FigmaButtonLayer({
       ))}
       {topBorderOverlay}
       {bottomBorderOverlay}
-    </Button>
+    </motion.button>
   );
 }
 
@@ -732,13 +980,14 @@ function FigmaFaqCardLayer({
               style={{ display: "block", width: "100%", height: "auto", marginBottom: "16px" }}
             />
           )}
-          <button
+          <motion.button
             type="button"
-            className="w-full appearance-none border-0 bg-transparent p-0 text-left"
+            className="w-full appearance-none border-0 bg-transparent p-0 text-left cursor-pointer"
             aria-label={questionText}
             aria-controls={panelId}
             aria-expanded={Boolean(isOpen)}
             onClick={() => faqAccordion?.toggleFaqCard(node.id)}
+            whileHover="hover"
             style={{
               display: "flex",
               alignItems: "center",
@@ -746,7 +995,11 @@ function FigmaFaqCardLayer({
               gap: "16px",
             }}
           >
-            <p
+            <motion.p
+              variants={{
+                hover: { color: "#fee101", x: 4 }
+              }}
+              transition={{ duration: 0.2, ease: SMOOTH_EASE }}
               style={{
                 ...textStyleToStyle("style_T33QPY"),
                 ...fillToTextStyle("fill_3YOX9I"),
@@ -756,14 +1009,19 @@ function FigmaFaqCardLayer({
               }}
             >
               {questionText}
-            </p>
-            <span
+            </motion.p>
+            <motion.span
               aria-hidden
+              variants={{
+                hover: { scale: 1.1, borderColor: "#fee101", color: "#fee101" }
+              }}
+              animate={{ rotate: isOpen ? 45 : 0 }}
+              transition={{ duration: 0.25, ease: SMOOTH_EASE }}
               className="inline-flex h-9 w-9 items-center justify-center rounded-full border-2 border-white text-2xl leading-none text-white"
             >
-              {isOpen ? "−" : "+"}
-            </span>
-          </button>
+              +
+            </motion.span>
+          </motion.button>
           <motion.p
             id={panelId}
             role="region"
@@ -880,12 +1138,15 @@ function FigmaAgendaSectionLayer({
           const isActive = activeDay === day;
 
           return (
-            <button
+            <motion.button
               key={day}
               type="button"
               aria-pressed={isActive}
               onClick={() => agenda?.setActiveAgendaDay(day)}
+              whileHover={reduceMotion ? {} : { scale: isActive ? 1 : 1.05 }}
+              whileTap={reduceMotion ? {} : { scale: 0.95 }}
               style={{
+                position: "relative",
                 height: "52px",
                 borderRadius: "80px",
                 border: "none",
@@ -894,11 +1155,24 @@ function FigmaAgendaSectionLayer({
                 display: "inline-flex",
                 alignItems: "center",
                 justifyContent: "center",
-                background: isActive ? "#FFFFFF" : "transparent",
+                background: "transparent",
                 color: isActive ? "#0B6839" : "#FFFFFF",
-                transition: "background-color 180ms ease, color 180ms ease",
+                transition: "color 200ms ease",
               }}
             >
+              {isActive && (
+                <motion.div
+                  layoutId="activeTabBackground"
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    backgroundColor: "#FFFFFF",
+                    borderRadius: "80px",
+                    zIndex: 0,
+                  }}
+                  transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                />
+              )}
               <span
                 style={{
                   ...(textNode ? textStyleFor(textNode, viewportWidth) : {}),
@@ -912,11 +1186,12 @@ function FigmaAgendaSectionLayer({
                   whiteSpace: "nowrap",
                   lineHeight: 1,
                   color: "inherit",
+                  zIndex: 1,
                 }}
               >
                 {day}
               </span>
-            </button>
+            </motion.button>
           );
         })}
       </div>
@@ -931,9 +1206,19 @@ function FigmaAgendaSectionLayer({
             transition={{ duration: reduceMotion ? 0 : 0.18, ease: "easeOut" }}
             style={{ display: "flex", flexDirection: "column", gap: "23px" }}
           >
-            {rows.map((item) => (
-              <div
+            {rows.map((item, i) => (
+              <motion.div
                 key={`${activeDay}-${item.time}-${item.activity}`}
+                initial={reduceMotion ? false : { opacity: 0, x: -24 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true, amount: 0.3 }}
+                whileHover={reduceMotion ? {} : { scale: 1.02, x: 6, backgroundColor: "#0C8A53" }}
+                transition={{
+                  scale: { duration: 0.15, ease: "easeOut" },
+                  x: { duration: 0.15, ease: "easeOut" },
+                  backgroundColor: { duration: 0.15, ease: "easeOut" },
+                  default: { duration: 0.4, delay: i * 0.07, ease: SMOOTH_EASE }
+                }}
                 style={{
                   width: "100%",
                   height: "56px",
@@ -942,6 +1227,7 @@ function FigmaAgendaSectionLayer({
                   display: "flex",
                   alignItems: "center",
                   paddingInline: "28px",
+                  cursor: "pointer",
                 }}
               >
                 <p
@@ -960,7 +1246,7 @@ function FigmaAgendaSectionLayer({
                 >
                   {item.time} | {item.activity}
                 </p>
-              </div>
+              </motion.div>
             ))}
           </motion.div>
         </AnimatePresence>
@@ -1002,14 +1288,27 @@ function FigmaBountiesSectionLayer({
       <div style={{ display: "flex", flexDirection: "column", width: "100%", height: "100%", justifyContent: "center", padding: "0 80px" }}>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "40px", rowGap: "80px" }}>
           {BOUNTIES.map((bounty, i) => (
-            <div key={i} style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+            <motion.div
+              key={i}
+              initial={reduceMotion ? false : { opacity: 0, y: 30, scale: 0.95 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
+              viewport={{ once: true, amount: 0.2 }}
+              whileHover={reduceMotion ? {} : { scale: 1.04, y: -6 }}
+              transition={{
+                layout: { duration: 0.2 },
+                scale: { duration: 0.2, ease: "easeOut" },
+                y: { duration: 0.2, ease: "easeOut" },
+                default: { duration: 0.5, delay: i * 0.06, ease: SMOOTH_EASE }
+              }}
+              style={{ display: "flex", flexDirection: "column", gap: "24px", cursor: "pointer" }}
+            >
               <BountiesDivider />
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", color: "#FFFFFF" }}>
                 <span className="font-sans font-bold" style={{ fontSize: "42px", letterSpacing: "-1px" }}>{bounty.sponsor}</span>
                 <span className="font-heading" style={{ fontSize: "64px", letterSpacing: "1px" }}>{bounty.amount}</span>
               </div>
               <BountiesDivider />
-            </div>
+            </motion.div>
           ))}
         </div>
       </div>
@@ -1099,13 +1398,20 @@ function FigmaLayer({
   if (node.type === "TEXT") {
     const hasFaqPlaceholderText = faqCardId ? /lorem\s+ipsum/i.test(node.text ?? "") : false;
     const faqTextOverride = hasFaqPlaceholderText || (faqCardId && node.id === "54:27265") ? "" : undefined;
+
+    // Stat numbers — render animated counter
+    if (STAT_NUMBER_IDS.has(node.id)) {
+      return <AnimatedCounter node={node} depth={depth} viewportWidth={viewportWidth} />;
+    }
     
-    const href = NAV_LINKS[node.id];
+    const href = node.id !== "54:13" ? NAV_LINKS[node.id] : undefined;
     if (href) {
       return (
         <motion.a 
           href={href} 
           style={{ ...textStyleFor(node, viewportWidth), textDecoration: "none", cursor: "pointer" }} 
+          whileHover={reduceMotion ? {} : { scale: 1.08, color: "#fee101" }}
+          transition={{ duration: 0.2 }}
           {...motionFor(node, depth, reduceMotion)}
         >
           {faqTextOverride ?? node.text ?? ""}
