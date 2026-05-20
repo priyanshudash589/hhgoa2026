@@ -190,6 +190,14 @@ const faqAnswerTextByCardId = Object.fromEntries(
   FAQ_CARD_ID_ORDER.map((id, index) => [id, faqEntries[index % faqEntries.length].answer]),
 ) as Record<string, string>;
 
+const HACKERS_TEXT_OVERRIDES: Record<string, string> = {
+  "54:27344": "Less Noise. More Signal",
+  "54:27347":
+    "Most hackathons are just hype and no substance. We're changing that. From October 28–31, we're taking over Goa for the country's biggest build-station.",
+  "54:27348":
+    "This is for the developers who live in their terminals and ship things that matter. No fluff, no useless networking—just 500 elite builders, high-speed fiber, and the ocean at your doorstep. If you're ready to lock in and build your legacy, we'll see you on the sand.",
+};
+
 const AGENDA_SECTION_FRAME_ID = "54:29998";
 const AGENDA_BACKGROUND_ASSET_ID = "54:29999";
 const AGENDA_OBJECTS_ASSET_ID = "54:30001";
@@ -1609,6 +1617,8 @@ function FigmaLayer({
       return <AnimatedCounter node={node} depth={depth} viewportWidth={viewportWidth} />;
     }
     
+    const hackersOverride = HACKERS_TEXT_OVERRIDES[node.id];
+
     const href = node.id !== "54:13" ? NAV_LINKS[node.id] : undefined;
     if (href) {
       return (
@@ -1619,14 +1629,14 @@ function FigmaLayer({
           transition={{ duration: 0.2 }}
           {...motionFor(node, depth, reduceMotion)}
         >
-          {faqTextOverride ?? node.text ?? ""}
+          {hackersOverride ?? faqTextOverride ?? node.text ?? ""}
         </motion.a>
       );
     }
 
     return (
       <motion.p style={textStyleFor(node, viewportWidth)} {...motionFor(node, depth, reduceMotion)}>
-        {faqTextOverride ?? node.text ?? ""}
+        {hackersOverride ?? faqTextOverride ?? node.text ?? ""}
       </motion.p>
     );
   }
