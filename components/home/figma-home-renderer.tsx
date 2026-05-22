@@ -577,17 +577,17 @@ const motionFor = (node: FigmaNode, depth: number, reduceMotion: boolean) => {
     };
   }
 
-  // Hero nodes — staggered entrance on page load
+  // Hero nodes — staggered entrance with spring overshoot
   if (HERO_NODE_IDS.has(node.id)) {
     const delay = HERO_STAGGER_DELAYS[node.id] ?? 0;
     return {
-      initial: { opacity: 0, y: 24, scale: 0.97 },
+      initial: { opacity: 0, y: 32, scale: 0.95 },
       animate: { opacity: 1, y: 0, scale: 1 },
       transition: {
-        duration: 0.7,
+        type: "spring" as const,
+        stiffness: 220,
+        damping: 18,
         delay,
-        ease: SMOOTH_EASE,
-        scale: { duration: 0.8, delay, ease: SPRING_EASE },
       },
     };
   }
@@ -884,7 +884,7 @@ function FigmaButtonLayer({
         aria-label={findText(node) ?? "Call to action"}
         className="appearance-none overflow-hidden rounded-none border-0 bg-transparent p-0 cursor-pointer"
         style={boxStyleFor(node, viewportWidth)}
-        whileHover={reduceMotion ? {} : { scale: 1.05 }}
+        whileHover={reduceMotion ? {} : { scale: 1.05, boxShadow: "0 0 30px rgba(254,225,1,0.25)" }}
         whileTap={reduceMotion ? {} : { scale: 0.96 }}
         transition={{ duration: 0.06, ease: SMOOTH_EASE }}
         {...motionFor(node, depth, reduceMotion)}
@@ -913,7 +913,7 @@ function FigmaButtonLayer({
         aria-label={findText(node) ?? "Go to Devfolio"}
         className="block overflow-hidden rounded-none border-0 bg-transparent p-0 hover:opacity-100 cursor-pointer"
         style={boxStyleFor(node, viewportWidth)}
-        whileHover={reduceMotion ? {} : { scale: 1.04 }}
+        whileHover={reduceMotion ? {} : { scale: 1.04, boxShadow: "0 0 30px rgba(254,225,1,0.25)" }}
         whileTap={reduceMotion ? {} : { scale: 0.97 }}
         transition={{ duration: 0.06, ease: SMOOTH_EASE }}
         {...motionFor(node, depth, reduceMotion)}
@@ -942,6 +942,9 @@ function FigmaButtonLayer({
         aria-label={findText(node) ?? "Apply to hacker house"}
         className="cta-button-glow fast-cta block overflow-hidden rounded-none border-0 bg-transparent p-0 hover:opacity-100 cursor-pointer"
         style={boxStyleFor(node, viewportWidth)}
+        whileHover={reduceMotion ? {} : { scale: 1.04 }}
+        whileTap={reduceMotion ? {} : { scale: 0.97 }}
+        transition={{ duration: 0.06, ease: SMOOTH_EASE }}
         {...motionFor(node, depth, reduceMotion)}
       >
         {borderlessChildren.map((child) => (
@@ -965,7 +968,7 @@ function FigmaButtonLayer({
       aria-label={findText(node) ?? "Call to action"}
       className="cta-button-glow overflow-hidden rounded-none border-0 bg-transparent p-0 tracking-normal shadow-none hover:opacity-100 cursor-pointer"
       style={boxStyleFor(node, viewportWidth)}
-      whileHover={reduceMotion ? {} : { scale: 1.06 }}
+      whileHover={reduceMotion ? {} : { scale: 1.06, boxShadow: "0 0 30px rgba(254,225,1,0.25)" }}
       whileTap={reduceMotion ? {} : { scale: 0.96 }}
       transition={{ duration: 0.06, ease: SMOOTH_EASE }}
       {...motionFor(node, depth, reduceMotion)}
@@ -1587,8 +1590,8 @@ function FigmaLayer({
         <motion.a 
           href={href} 
           style={{ ...textStyleFor(node, viewportWidth), textDecoration: "none", cursor: "pointer" }} 
-          whileHover={reduceMotion ? {} : { scale: 1.08, color: "#fee101" }}
-          transition={{ duration: 0.2 }}
+          whileHover={reduceMotion ? {} : { scale: 1.1, color: "#fee101", textShadow: "0 0 20px rgba(254,225,1,0.4)" }}
+          transition={{ type: "spring", stiffness: 400, damping: 12 }}
           {...motionFor(node, depth, reduceMotion)}
         >
           {hackersOverride ?? faqTextOverride ?? node.text ?? ""}
@@ -1597,7 +1600,9 @@ function FigmaLayer({
     }
 
     return (
-      <motion.p style={textStyleFor(node, viewportWidth)} {...motionFor(node, depth, reduceMotion)}>
+      <motion.p style={textStyleFor(node, viewportWidth)}
+        {...motionFor(node, depth, reduceMotion)}
+      >
         {hackersOverride ?? faqTextOverride ?? node.text ?? ""}
       </motion.p>
     );

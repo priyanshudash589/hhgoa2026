@@ -282,6 +282,47 @@
   }
 }
 
+/* ── Custom Scrollbar ── */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0b6839;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #fee101;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #ffd700;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #fee101 #0b6839;
+}
+
+/* ── Animated Gradient Text (for "Less Noise. More Signal") ── */
+
+.gradient-text {
+  background: linear-gradient(135deg, #fee101, #fffbe8, #fee101);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradientShift 4s ease-in-out infinite;
+}
+
+@keyframes gradientShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
 /* CTA button glow — draws attention to primary actions */
 @keyframes ctaGlow {
   0%, 100% {
