@@ -8,7 +8,6 @@ import {
   FaqAccordionContext,
   AgendaContext,
 } from "@/components/home/figma-home-renderer";
-import { SparklesCore } from "@/components/ui/sparkles";
 
 const FIGMA_WIDTH = 1440;
 
@@ -72,16 +71,6 @@ export function FigmaPageShell({
         minHeight: `${canvasHeight * scale}px`,
       }}
     >
-      <div className="fixed inset-0 pointer-events-none z-0" style={{ opacity: 0.35 }}>
-        <SparklesCore
-          id="sparkles-bg"
-          particleColor="#fee101"
-          minSize={0.6}
-          maxSize={1.8}
-          speed={2}
-          particleDensity={40}
-        />
-      </div>
       <main style={rootStyle}>
         <AgendaContext.Provider value={agendaValue}>
           <FaqAccordionContext.Provider value={faqAccordionValue}>
