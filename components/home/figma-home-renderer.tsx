@@ -13,6 +13,7 @@ import {
   strokeToStyle,
   textStyleToStyle,
 } from "@/lib/figma-mappers";
+import { computeCollapseInfo, TOTAL_HIDDEN_HEIGHT } from "@/lib/figma-collapse";
 
 type FigmaNode = {
   id: string;
@@ -31,7 +32,8 @@ type FigmaNode = {
 
 const rootNode = figmaHomeTree.rootNode as FigmaNode;
 const FIGMA_WIDTH = 1440;
-const FIGMA_HEIGHT = 16024;
+const BASE_FIGMA_HEIGHT = 16024;
+const FIGMA_HEIGHT = BASE_FIGMA_HEIGHT - TOTAL_HIDDEN_HEIGHT;
 
 type RasterLayer = {
   src: string;
@@ -111,22 +113,25 @@ const INSIDE_ROOM_DAY_CARD_BODY_IDS = new Set([
 ]);
 
 const NAV_LINKS: Record<string, string> = {
-  "54:6": "#about",
-  "54:7": "#agenda",
-  "54:8": "#tracks",
-  "54:9": "#bounties",
-  "54:10": "#team",
-  "54:11": "#venue",
+  "54:6": "/#about",
   "54:13": "https://hacker-house-goa-2026.devfolio.co/", // CTA link
 };
 
-const HIDDEN_NODE_IDS = new Set([
-  "54:433",    // Tracks section (includes "PTRacksGOA" heading)
-  "54:26751",  // Sponsors
-  "54:8508",   // Team / Friends @HH
-  "54:27763",  // Bounties
-  "54:29998",  // Agenda
+const HIDDEN_NAV_IDS = new Set(["54:7", "54:8", "54:9", "54:10", "54:11"]);
+
+const ROUTED_SECTION_IDS = new Set([
+  "54:433",
+  "54:29998",
+  "54:27763",
+  "54:8508",
+  "54:3935",
+  "54:17605",
+  "54:22178",
+  "54:26751",
+  "54:26834",
 ]);
+
+
 
 const SECTION_IDS: Record<string, string> = {
   "54:426": "about",
@@ -144,19 +149,19 @@ const FAQ_STRIP_TOP_ASSET_ID = "54:27257";
 const FAQ_STRIP_BOTTOM_ASSET_ID = "54:27273";
 const DEFAULT_OPEN_FAQ_CARD_ID: string | null = null;
 
-type FaqAccordionContextValue = {
+export type FaqAccordionContextValue = {
   openFaqCardId: string | null;
   toggleFaqCard: (id: string) => void;
 };
 
-const FaqAccordionContext = createContext<FaqAccordionContextValue | null>(null);
+export const FaqAccordionContext = createContext<FaqAccordionContextValue | null>(null);
 
-type AgendaContextValue = {
+export type AgendaContextValue = {
   activeAgendaDay: "Day 1" | "Day 2" | "Day 3";
   setActiveAgendaDay: (day: "Day 1" | "Day 2" | "Day 3") => void;
 };
 
-const AgendaContext = createContext<AgendaContextValue | null>(null);
+export const AgendaContext = createContext<AgendaContextValue | null>(null);
 
 const faqEntries = [
   {
@@ -279,7 +284,7 @@ const styleOverrideFor = (
   // Nav links frame — shift left and tighten gap to prevent overlapping the Apply button
   if (node.id === "54:5" && mode === "box") {
     return {
-      left: "540px",
+      left: "1040px",
       gap: "24px",
     };
   }
@@ -1356,58 +1361,6 @@ function FigmaBountiesSectionLayer({
   );
 }
 
-const TRACKS = Array(4).fill({
-  title: "Privacy",
-  description: "Lorem Ipsum Is Simply Dummy Text Of The Printing And Typesetting Industry. Lorem Ipsum Has Been The Industry's Standard Dummy Text Ever Since The 1500s, When An Unknown Printer Took A Galley Of Type And Scrambled It To Make A Type Specimen Book. It Has Survived Not Only Five Centuries",
-});
-
-function TracksDivider() {
-  return (
-    <div style={{ width: "100%", height: "24px", position: "relative", background: "#FF0080" }}>
-      <svg width="100%" height="24" preserveAspectRatio="none">
-        <defs>
-          <pattern id="tracks-floral" x="0" y="0" width="24" height="24" patternUnits="userSpaceOnUse">
-            <rect width="24" height="24" fill="#0B6839" />
-            <circle cx="12" cy="12" r="4" fill="#FF0080" />
-            <polygon points="12,2 14,8 20,12 14,16 12,22 10,16 4,12 10,8" fill="#FEE101" />
-          </pattern>
-        </defs>
-        <rect x="0" y="0" width="100%" height="100%" fill="url(#tracks-floral)" />
-      </svg>
-    </div>
-  );
-}
-
-function FigmaTracksSectionLayer({
-  node,
-  depth,
-  viewportWidth,
-}: {
-  node: FigmaNode;
-  depth: number;
-  viewportWidth: number;
-}) {
-  const reduceMotion = useReducedMotion() ?? false;
-  return (
-    <motion.div id={SECTION_IDS[node.id]} style={{ ...boxStyleFor(node, viewportWidth), background: "#FEE101" }} {...motionFor(node, depth, reduceMotion)}>
-      <div style={{ display: "flex", flexDirection: "column", width: "100%", height: "100%", justifyContent: "center", padding: "80px" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "40px" }}>
-          {TRACKS.map((track, i) => (
-            <div key={i} style={{ background: "#0B6839", display: "flex", flexDirection: "column" }}>
-              <TracksDivider />
-              <div style={{ padding: "40px", display: "flex", flexDirection: "column", gap: "24px", flex: 1 }}>
-                <h3 className="font-heading" style={{ color: "#FFFFFF", fontSize: "72px", lineHeight: 1, margin: 0 }}>{track.title}</h3>
-                <p className="font-sans" style={{ color: "#FFFFFF", fontSize: "24px", lineHeight: 1.4, margin: 0 }}>{track.description}</p>
-              </div>
-              <TracksDivider />
-            </div>
-          ))}
-        </div>
-      </div>
-    </motion.div>
-  );
-}
-
 interface TeamMember {
   id: string;
   name: string;
@@ -1597,8 +1550,6 @@ function FigmaLayer({
 }) {
   const reduceMotion = useReducedMotion() ?? false;
 
-  if (HIDDEN_NODE_IDS.has(node.id)) return null;
-
   if (PEOPLE_ROW_IDS.has(node.id)) {
     return <FigmaPeopleRowLayer node={node} depth={depth} viewportWidth={viewportWidth} />;
   }
@@ -1619,6 +1570,7 @@ function FigmaLayer({
   }
 
   if (node.type === "TEXT") {
+    if (HIDDEN_NAV_IDS.has(node.id)) return null;
     const hasFaqPlaceholderText = faqCardId ? /lorem\s+ipsum/i.test(node.text ?? "") : false;
     const faqTextOverride = hasFaqPlaceholderText || (faqCardId && node.id === "54:27265") ? "" : undefined;
 
@@ -1670,8 +1622,12 @@ function FigmaLayer({
   }
 
   const children = node.children ?? [];
+
   return (
-    <motion.div style={boxStyleFor(node, viewportWidth)} {...motionFor(node, depth, reduceMotion)}>
+    <motion.div
+      style={boxStyleFor(node, viewportWidth)}
+      {...motionFor(node, depth, reduceMotion)}
+    >
       {children.map((child) => (
         <FigmaLayer
           key={child.id}
@@ -1685,6 +1641,11 @@ function FigmaLayer({
   );
 }
 
+export const figmaRootNode = rootNode;
+export const figmaWidth = FIGMA_WIDTH;
+export const figmaHeight = FIGMA_HEIGHT;
+export { FigmaLayer, rasterLayerMap, NAV_LINKS, ROUTED_SECTION_IDS };
+
 export function FigmaHomeRenderer() {
   const [viewportWidth, setViewportWidth] = useState(1440);
   const [openFaqCardId, setOpenFaqCardId] = useState<string | null>(DEFAULT_OPEN_FAQ_CARD_ID);
@@ -1696,6 +1657,11 @@ export function FigmaHomeRenderer() {
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, []);
+
+  const collapseInfo = useMemo(
+    () => computeCollapseInfo(rootNode.children ?? []),
+    [],
+  );
 
   const scale = useMemo(() => viewportWidth / FIGMA_WIDTH, [viewportWidth]);
   const toggleFaqCard = useCallback((id: string) => {
@@ -1714,7 +1680,7 @@ export function FigmaHomeRenderer() {
     position: "absolute",
     left: "50%",
     top: 0,
-    overflow: "hidden",
+    overflow: "visible",
     width: `${FIGMA_WIDTH}px`,
     height: `${FIGMA_HEIGHT}px`,
     transform: `translateX(-50%) scale(${scale})`,
@@ -1725,14 +1691,38 @@ export function FigmaHomeRenderer() {
   return (
     <section
       className="relative w-full overflow-hidden bg-brand-primary"
-      style={{ height: `${FIGMA_HEIGHT * scale}px` }}
+      style={{
+        height: `${FIGMA_HEIGHT * scale}px`,
+        minHeight: `${FIGMA_HEIGHT * scale}px`,
+      }}
     >
       <main style={rootStyle} aria-label="HH Goa home page">
         <AgendaContext.Provider value={agendaValue}>
           <FaqAccordionContext.Provider value={faqAccordionValue}>
-            {(rootNode.children ?? []).map((child) => (
-              <FigmaLayer key={child.id} node={child} depth={1} viewportWidth={viewportWidth} />
-            ))}
+            {(rootNode.children ?? [])
+              .filter((child) => !collapseInfo.hiddenIds.has(child.id))
+              .map((child) => {
+                const offset = collapseInfo.offsets.get(child.id) ?? 0;
+                if (offset === 0) {
+                  return (
+                    <FigmaLayer key={child.id} node={child} depth={1} viewportWidth={viewportWidth} />
+                  );
+                }
+                return (
+                  <div
+                    key={child.id}
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      width: "100%",
+                      transform: `translateY(${-offset}px)`,
+                    }}
+                  >
+                    <FigmaLayer node={child} depth={1} viewportWidth={viewportWidth} />
+                  </div>
+                );
+              })}
           </FaqAccordionContext.Provider>
         </AgendaContext.Provider>
       </main>
