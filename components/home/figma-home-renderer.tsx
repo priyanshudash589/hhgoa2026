@@ -271,9 +271,19 @@ const styleOverrideFor = (
   const isCompact = viewportWidth < 1280;
   const isNarrow = viewportWidth < 920;
 
-  // HH Goa logo — strip pink fill from Figma so the transparent SVG shows through
-  if (node.id === "54:4" && mode === "box") {
-    return { background: "none" };
+  // Vector icon with pink background — strip it
+  if (node.id === "54:3934" && (mode === "box" || mode === "asset")) {
+    return { background: "transparent", backgroundColor: "transparent" };
+  }
+
+  // Agenda section — ensure the agenda page uses a transparent section container
+  if (node.id === AGENDA_SECTION_FRAME_ID && mode === "box") {
+    return { background: "transparent", backgroundColor: "transparent" };
+  }
+
+  // Agenda section assets — keep the section visuals but strip any background fill overlay
+  if ((node.id === AGENDA_BACKGROUND_ASSET_ID || node.id === AGENDA_OBJECTS_ASSET_ID) && mode === "asset") {
+    return { background: "transparent", backgroundColor: "transparent" };
   }
 
   // गोवा badge — same treatment

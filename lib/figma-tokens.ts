@@ -3451,6 +3451,18 @@ export const figmaTokens = {
         "height": 146
       }
     },
+    "layout_ZRCV8T": {
+      "mode": "none",
+      "sizing": {},
+      "locationRelativeToParent": {
+        "x": 40,
+        "y": 2220
+      },
+      "dimensions": {
+        "width": 1400,
+        "height": 80
+      }
+    },
     "layout_5DIRLZ": {
       "mode": "none",
       "sizing": {},

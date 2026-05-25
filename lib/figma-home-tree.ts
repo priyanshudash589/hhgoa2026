@@ -388,6 +388,15 @@ export const figmaHomeTree = {
         ]
       },
       {
+        "id": "54:3486",
+        "name": "Inside HHG: Past Editions",
+        "type": "TEXT",
+        "layout": "layout_ZRCV8T",
+        "text": "Inside HHG: Past Editions",
+        "textStyle": "style_ALM0BT",
+        "fills": "fill_3YOX9I"
+      },
+      {
         "id": "54:3471",
         "name": "2nd 1",
         "type": "RECTANGLE",
