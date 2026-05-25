@@ -18,6 +18,9 @@ const imbue = Imbue({
 export const metadata: Metadata = {
   title: "HH GOA | Hacker House Goa 2026",
   description: "4 days. one rhythm. everything intentional. Join us for an experimental hackathon experience in Goa, India.",
+  icons: {
+    icon: "/favicon.webp",
+  },
 };
 
 export default function RootLayout({

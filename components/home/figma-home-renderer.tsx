@@ -1813,7 +1813,7 @@ export function FigmaHomeRenderer() {
   const [activeAgendaDay, setActiveAgendaDay] = useState<"Day 1" | "Day 2" | "Day 3">("Day 1");
 
   useEffect(() => {
-    const onResize = () => setViewportWidth(window.innerWidth);
+    const onResize = () => setViewportWidth(document.documentElement.clientWidth);
     onResize();
     window.addEventListener("resize", onResize);
 
@@ -1870,13 +1870,13 @@ export function FigmaHomeRenderer() {
 
   const rootStyle: React.CSSProperties = {
     position: "absolute",
-    left: "50%",
+    left: 0,
     top: 0,
     overflow: "visible",
     width: `${FIGMA_WIDTH}px`,
     height: `${FIGMA_HEIGHT}px`,
-    transform: `translateX(-50%) scale(${scale})`,
-    transformOrigin: "top center",
+    transform: `scale(${scale})`,
+    transformOrigin: "top left",
     background: solidFillColor(rootNode.fills) ?? "#0B6839",
   };
 
