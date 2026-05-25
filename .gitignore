@@ -42,5 +42,7 @@ next-env.d.ts
 .playwright-browsers/
 
 # custom ignored files
+.omc
+.opencode
 opencode.json
 *.mp4

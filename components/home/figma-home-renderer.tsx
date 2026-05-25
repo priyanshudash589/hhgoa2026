@@ -276,6 +276,11 @@ const styleOverrideFor = (
     return { background: "transparent", backgroundColor: "transparent" };
   }
 
+  // Hero logo — strip pink fill so transparent SVG shows through
+  if (node.id === "54:4" && mode === "box") {
+    return { background: "none", backgroundColor: "transparent" };
+  }
+
   // Agenda section — ensure the agenda page uses a transparent section container
   if (node.id === AGENDA_SECTION_FRAME_ID && mode === "box") {
     return { background: "transparent", backgroundColor: "transparent" };

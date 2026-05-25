@@ -1,5 +1,5 @@
 export const figmaAssetMap = {
-  '54:4': '/assets/logo.svg',
+  '54:4': '/assets/2-47.svg',
   '54:14': '/assets/002-group-54-14.svg',
   '54:65': '/assets/003-group-54-65.svg',
   '54:116': '/assets/004-frame-1948754861-54-116.svg',
