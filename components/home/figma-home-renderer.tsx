@@ -1631,10 +1631,11 @@ function FigmaVideoLayer({
       <video
         ref={videoRef}
         src="/Prehype.mp4"
-        muted
+        autoPlay
+        muted={isMuted}
         loop
         playsInline
-        preload="metadata"
+        preload="auto"
         style={{
           width: "100%",
           height: "100%",
