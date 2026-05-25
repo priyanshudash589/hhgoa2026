@@ -61,6 +61,7 @@ const HERO_BUTTON_ID = "54:12";
 const VENUE_BUTTON_ID = "54:26841";
 const DEVFOLIO_BUTTON_ID = "54:27349";
 const buttonFrameIds = new Set([HERO_BUTTON_ID, VENUE_BUTTON_ID, DEVFOLIO_BUTTON_ID]);
+const VIDEO_SECTION_ID = "54:430";
 const INSIDE_ROOM_SCENE_ID = "54:3480";
 const INSIDE_ROOM_TITLE_FRAME_ID = "54:3481";
 const INSIDE_ROOM_KICKER_ID = "54:3482";
@@ -115,6 +116,10 @@ const INSIDE_ROOM_DAY_CARD_BODY_IDS = new Set([
 const NAV_LINKS: Record<string, string> = {
   "54:6": "/#about",
   "54:13": "https://hacker-house-goa-2026.devfolio.co/", // CTA link
+  "54:30955": "https://x.com/247pmstudio",
+  "54:30956": "https://x.com/ThePrayasu",
+  "54:30960": "https://t.me/ThePrayasu",
+  "54:30964": "https://mail.google.com/mail/?view=cm&fs=1&to=satapathyprayasu@gmail.com",
 };
 
 const HIDDEN_NAV_IDS = new Set(["54:7", "54:8", "54:9", "54:10", "54:11"]);
@@ -498,6 +503,7 @@ const textStyleFor = (node: FigmaNode, viewportWidth: number): React.CSSProperti
     margin: 0,
     overflow: "visible",
     whiteSpace: "pre-line",
+    zIndex: 10,
   } as React.CSSProperties;
 
   if (SIGN_TEXT_IDS.has(node.id)) {
@@ -643,6 +649,37 @@ const motionFor = (node: FigmaNode, depth: number, reduceMotion: boolean) => {
       whileInView: { opacity: 1, x: 0 },
       viewport: { once: true, amount: 0.3 },
       transition: { duration: 0.65, ease: SMOOTH_EASE },
+    };
+  }
+
+  // "Inside the room" kicker — dramatic letter-spacing reveal with blur
+  if (node.id === INSIDE_ROOM_KICKER_ID) {
+    return {
+      initial: { opacity: 0, letterSpacing: "0.5em", filter: "blur(8px)", y: 20 },
+      whileInView: { opacity: 1, letterSpacing: "0em", filter: "blur(0px)", y: 0 },
+      viewport: { once: true, amount: 0.3 },
+      transition: {
+        duration: 1.2,
+        ease: SPRING_EASE,
+        letterSpacing: { duration: 1.4, ease: SMOOTH_EASE },
+        filter: { duration: 0.8 },
+      },
+    };
+  }
+
+  // "4 days. one rhythm..." heading — cinematic slide-up with scale
+  if (node.id === INSIDE_ROOM_HEADING_ID) {
+    return {
+      initial: { opacity: 0, y: 60, scale: 0.88, filter: "blur(4px)" },
+      whileInView: { opacity: 1, y: 0, scale: 1, filter: "blur(0px)" },
+      viewport: { once: true, amount: 0.3 },
+      transition: {
+        duration: 1.0,
+        delay: 0.35,
+        ease: SPRING_EASE,
+        scale: { type: "spring" as const, stiffness: 120, damping: 16, delay: 0.35 },
+        filter: { duration: 0.6, delay: 0.4 },
+      },
     };
   }
 
@@ -1540,6 +1577,117 @@ function FigmaPeopleRowLayer({
   );
 }
 
+function FigmaVideoLayer({
+  node,
+  depth,
+}: {
+  node: FigmaNode;
+  depth: number;
+}) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const isInView = useInView(containerRef, { once: false, amount: 0.35 });
+  const reduceMotion = useReducedMotion() ?? false;
+  const [isMuted, setIsMuted] = useState(false);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    if (isInView) {
+      video.muted = false;
+      video.play().catch(() => {
+        // Browser blocked unmuted autoplay — fall back to muted
+        video.muted = true;
+        setIsMuted(true);
+        video.play().catch(() => {});
+      });
+    } else {
+      video.pause();
+    }
+  }, [isInView]);
+
+  const toggleMute = useCallback(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    video.muted = !video.muted;
+    setIsMuted(video.muted);
+  }, []);
+
+  const containerStyle: React.CSSProperties = {
+    ...baseStyleFor(node),
+    background: "#000",
+    overflow: "hidden",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  };
+
+  return (
+    <motion.div
+      ref={containerRef}
+      style={containerStyle}
+      {...motionFor(node, depth, reduceMotion)}
+    >
+      <video
+        ref={videoRef}
+        src="/Prehype.mp4"
+        muted
+        loop
+        playsInline
+        preload="metadata"
+        style={{
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
+          display: "block",
+        }}
+      />
+      <motion.button
+        type="button"
+        aria-label={isMuted ? "Unmute video" : "Mute video"}
+        onClick={toggleMute}
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
+        transition={{ duration: 0.2 }}
+        style={{
+          position: "absolute",
+          bottom: "100px",
+          right: "100px",
+          width: "56px",
+          height: "56px",
+          borderRadius: "50%",
+          border: "2px solid rgba(255,255,255,0.6)",
+          background: "rgba(0,0,0,0.5)",
+          backdropFilter: "blur(8px)",
+          color: "#fff",
+          cursor: "pointer",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 10,
+          padding: 0,
+        }}
+      >
+        {isMuted ? (
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+            <line x1="23" y1="9" x2="17" y2="15" />
+            <line x1="17" y1="9" x2="23" y2="15" />
+          </svg>
+        ) : (
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+            <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+            <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+          </svg>
+        )}
+      </motion.button>
+    </motion.div>
+  );
+}
+
 function FigmaLayer({
   node,
   depth,
@@ -1552,6 +1700,10 @@ function FigmaLayer({
   faqCardId?: string;
 }) {
   const reduceMotion = useReducedMotion() ?? false;
+
+  if (node.id === VIDEO_SECTION_ID) {
+    return <FigmaVideoLayer node={node} depth={depth} />;
+  }
 
   if (PEOPLE_ROW_IDS.has(node.id)) {
     return <FigmaPeopleRowLayer node={node} depth={depth} viewportWidth={viewportWidth} />;
@@ -1586,9 +1738,12 @@ function FigmaLayer({
 
     const href = node.id !== "54:13" ? NAV_LINKS[node.id] : undefined;
     if (href) {
+      const isExternal = href.startsWith("http");
       return (
         <motion.a 
           href={href} 
+          target={isExternal ? "_blank" : undefined}
+          rel={isExternal ? "noopener noreferrer" : undefined}
           style={{ ...textStyleFor(node, viewportWidth), textDecoration: "none", cursor: "pointer" }} 
           whileHover={reduceMotion ? {} : { scale: 1.1, color: "#fee101", textShadow: "0 0 20px rgba(254,225,1,0.4)" }}
           transition={{ type: "spring", stiffness: 400, damping: 12 }}
@@ -1660,7 +1815,38 @@ export function FigmaHomeRenderer() {
     const onResize = () => setViewportWidth(window.innerWidth);
     onResize();
     window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
+
+    // Smooth deselection: clear active selections when clicking empty or structural areas
+    const handleDeselect = (e: MouseEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (!target) return;
+
+      const isInteractiveOrText = 
+        target.tagName === "INPUT" || 
+        target.tagName === "TEXTAREA" || 
+        target.tagName === "A" || 
+        target.tagName === "BUTTON" ||
+        target.closest("a") || 
+        target.closest("button") || 
+        target.closest("input") || 
+        target.closest("textarea") ||
+        (target.tagName === "SPAN" && target.style.userSelect !== "none") ||
+        (target.tagName === "P" && target.style.userSelect !== "none");
+
+      if (!isInteractiveOrText) {
+        const selection = window.getSelection();
+        if (selection && selection.toString()) {
+          selection.removeAllRanges();
+        }
+      }
+    };
+    
+    document.addEventListener("click", handleDeselect);
+
+    return () => {
+      window.removeEventListener("resize", onResize);
+      document.removeEventListener("click", handleDeselect);
+    };
   }, []);
 
   const collapseInfo = useMemo(
