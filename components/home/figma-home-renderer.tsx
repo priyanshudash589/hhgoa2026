@@ -113,6 +113,21 @@ const INSIDE_ROOM_DAY_CARD_BODY_IDS = new Set([
   "54:3933",
 ]);
 
+const DAY_HEADING_SUBTITLES: Record<string, string> = {
+  "54:3862": "where it all begins",
+  "54:3865": "problem. solution. market",
+  "54:3864": "heads down. ship or ship",
+  "54:3863": "the world watches",
+};
+
+// Hide the day card bullet list frames entirely
+const HIDDEN_DAY_BULLET_FRAME_IDS = new Set([
+  "54:3866", // Day 01 bullet list
+  "54:3883", // Day 02 bullet list
+  "54:3900", // Day 03 bullet list
+  "54:3917", // Day 04 bullet list
+]);
+
 const NAV_LINKS: Record<string, string> = {
   "54:6": "/#about",
   "54:13": "https://hacker-house-goa-2026.devfolio.co/", // CTA link
@@ -1062,9 +1077,9 @@ function FigmaFaqCardLayer({
   const contentStyle = contentNode ? boxStyleFor(contentNode, viewportWidth) : undefined;
   const contentLayoutStyle: React.CSSProperties | undefined = contentStyle
     ? {
-        ...contentStyle,
-        display: "block",
-      }
+      ...contentStyle,
+      display: "block",
+    }
     : undefined;
   const isOpen = faqAccordion?.openFaqCardId === node.id;
 
@@ -1137,10 +1152,10 @@ function FigmaFaqCardLayer({
               ...textStyleToStyle("style_HLR0I9"),
               ...fillToTextStyle("fill_2MQ4S4"),
               margin: 0,
-                marginTop: "14px",
+              marginTop: "14px",
               overflow: "hidden",
               pointerEvents: isOpen ? "auto" : "none",
-                maxWidth: "none",
+              maxWidth: "none",
             }}
           >
             {answerText ?? ""}
@@ -1455,7 +1470,7 @@ function FigmaPeopleCard({
   index: number;
 }) {
   const reduceMotion = useReducedMotion() ?? false;
-  
+
   // Card layout: 197px width
   const cardStyle: React.CSSProperties = {
     width: "197px",
@@ -1614,7 +1629,7 @@ function FigmaVideoLayer({
         // Browser blocked unmuted autoplay — fall back to muted
         video.muted = true;
         setIsMuted(true);
-        video.play().catch(() => {});
+        video.play().catch(() => { });
       });
     } else {
       video.pause();
@@ -1719,6 +1734,9 @@ function FigmaLayer({
     return <FigmaVideoLayer node={node} depth={depth} />;
   }
 
+  // Hide day card bullet list frames
+  if (HIDDEN_DAY_BULLET_FRAME_IDS.has(node.id)) return null;
+
   if (PEOPLE_ROW_IDS.has(node.id)) {
     return <FigmaPeopleRowLayer node={node} depth={depth} viewportWidth={viewportWidth} />;
   }
@@ -1747,18 +1765,76 @@ function FigmaLayer({
     if (STAT_NUMBER_IDS.has(node.id)) {
       return <AnimatedCounter node={node} depth={depth} viewportWidth={viewportWidth} />;
     }
-    
+
     const hackersOverride = HACKERS_TEXT_OVERRIDES[node.id];
+
+    // Day headings — render with subtitle (bold, centered, larger)
+    if (INSIDE_ROOM_DAY_HEADING_IDS.has(node.id)) {
+      const subtitle = DAY_HEADING_SUBTITLES[node.id];
+      const parsedLayout = layoutToStyle(node.layout);
+      return (
+        <motion.div
+          style={{
+            position: "absolute",
+            left: parsedLayout.left,
+            top: parsedLayout.top,
+            width: "280px",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+          }}
+          {...motionFor(node, depth, reduceMotion)}
+        >
+          <motion.p style={{
+            ...textStyleFor(node, viewportWidth),
+            position: "relative",
+            left: "auto",
+            top: "auto",
+            textAlign: "center",
+            margin: 0,
+          }}>
+            {node.text ?? ""}
+          </motion.p>
+          {subtitle && (
+            <motion.p
+              style={{
+                ...fillToTextStyle(node.fills),
+                ...textStyleToStyle(node.textStyle),
+                position: "relative",
+                fontWeight: 700,
+                fontSize: "18px",
+                lineHeight: "1.3em",
+                letterSpacing: "-0.01em",
+                textTransform: "uppercase" as const,
+                textAlign: "center",
+                margin: 0,
+                marginTop: "48px", // Brings the paragraph down, leaving one line of space
+                opacity: 1,
+                whiteSpace: "nowrap",
+                overflow: "visible",
+                width: "100%",
+              }}
+              initial={reduceMotion ? {} : { opacity: 0, y: 8 }}
+              whileInView={reduceMotion ? {} : { opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.3 }}
+              transition={{ duration: 0.5, delay: 0.2, ease: SMOOTH_EASE }}
+            >
+              {subtitle}
+            </motion.p>
+          )}
+        </motion.div>
+      );
+    }
 
     const href = node.id !== "54:13" ? NAV_LINKS[node.id] : undefined;
     if (href) {
       const isExternal = href.startsWith("http");
       return (
-        <motion.a 
-          href={href} 
+        <motion.a
+          href={href}
           target={isExternal ? "_blank" : undefined}
           rel={isExternal ? "noopener noreferrer" : undefined}
-          style={{ ...textStyleFor(node, viewportWidth), textDecoration: "none", cursor: "pointer" }} 
+          style={{ ...textStyleFor(node, viewportWidth), textDecoration: "none", cursor: "pointer" }}
           whileHover={reduceMotion ? {} : { scale: 1.1, color: "#fee101", textShadow: "0 0 20px rgba(254,225,1,0.4)" }}
           transition={{ type: "spring", stiffness: 400, damping: 12 }}
           {...motionFor(node, depth, reduceMotion)}
@@ -1835,14 +1911,14 @@ export function FigmaHomeRenderer() {
       const target = e.target as HTMLElement | null;
       if (!target) return;
 
-      const isInteractiveOrText = 
-        target.tagName === "INPUT" || 
-        target.tagName === "TEXTAREA" || 
-        target.tagName === "A" || 
+      const isInteractiveOrText =
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.tagName === "A" ||
         target.tagName === "BUTTON" ||
-        target.closest("a") || 
-        target.closest("button") || 
-        target.closest("input") || 
+        target.closest("a") ||
+        target.closest("button") ||
+        target.closest("input") ||
         target.closest("textarea") ||
         (target.tagName === "SPAN" && target.style.userSelect !== "none") ||
         (target.tagName === "P" && target.style.userSelect !== "none");
@@ -1854,7 +1930,7 @@ export function FigmaHomeRenderer() {
         }
       }
     };
-    
+
     document.addEventListener("click", handleDeselect);
 
     return () => {
