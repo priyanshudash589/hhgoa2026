@@ -129,7 +129,7 @@ const HIDDEN_DAY_BULLET_FRAME_IDS = new Set([
 ]);
 
 const NAV_LINKS: Record<string, string> = {
-  "54:6": "/#about",
+  "54:6": "/#check-hype",
   "54:13": "https://hacker-house-goa-2026.devfolio.co/", // CTA link
   "54:30955": "https://x.com/247pmstudio",
   "54:30956": "https://x.com/ThePrayasu",
@@ -154,7 +154,7 @@ const ROUTED_SECTION_IDS = new Set([
 
 
 const SECTION_IDS: Record<string, string> = {
-  "54:426": "about",
+  "54:430": "check-hype",
   "54:30922": "agenda",
   "54:433": "tracks",
   "54:27763": "bounties",
@@ -203,11 +203,6 @@ const faqEntries = [
     question: "How are teams formed?",
     answer:
       "You can come with a pre-formed team or find teammates during our team formation session on Day 1. We'll have networking activities and a team matching board to help you find the perfect collaborators.",
-  },
-  {
-    question: "What are the judging criteria?",
-    answer:
-      "Projects will be judged based on: Innovation & creativity (30%), Technical implementation (25%), Business potential (20%), Presentation quality (15%), and Impact (10%).",
   },
   {
     question: "Can I start working on my project before the event?",
@@ -319,7 +314,7 @@ const styleOverrideFor = (
   // Nav links frame — shift left and tighten gap to prevent overlapping the Apply button
   if (node.id === "54:5" && mode === "box") {
     return {
-      left: "1040px",
+      left: "1000px",
       gap: "24px",
     };
   }
@@ -1655,6 +1650,7 @@ function FigmaVideoLayer({
   return (
     <motion.div
       ref={containerRef}
+      id={SECTION_IDS[node.id]}
       style={containerStyle}
       {...motionFor(node, depth, reduceMotion)}
     >

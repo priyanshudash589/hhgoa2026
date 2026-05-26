@@ -32,7 +32,7 @@ export const figmaHomeTree = {
             "name": "page",
             "type": "TEXT",
             "layout": "layout_XM93Y8",
-            "text": "ABOUT",
+            "text": "CHECK HYPE",
             "textStyle": "style_D4I45O",
             "fills": "fill_3YOX9I"
           },
