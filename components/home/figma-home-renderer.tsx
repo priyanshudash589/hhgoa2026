@@ -162,7 +162,7 @@ const SECTION_IDS: Record<string, string> = {
   "54:26834": "venue",
 };
 
-const FAQ_CARD_ID_ORDER = ["54:27256", "54:27278", "54:27294", "54:27310", "54:27326"] as const;
+const FAQ_CARD_ID_ORDER = ["54:27256", "54:27278", "54:27294", "54:27310", "54:27326", "54:27326_extra"] as const;
 const FAQ_CARD_IDS: ReadonlySet<string> = new Set(FAQ_CARD_ID_ORDER);
 const FAQ_STRIP_NODE_IDS = new Set(["54:27257", "54:27273", "54:27289", "54:27305", "54:27321", "54:27337"]);
 const FAQ_STRIP_TOP_ASSET_ID = "54:27257";
@@ -188,6 +188,11 @@ const faqEntries = [
     question: "Who can participate in Hacker House Goa?",
     answer:
       "Anyone with a passion for building! Whether you're a developer, designer, product manager, or just someone with great ideas - you're welcome here. Teams of 2-4 people are encouraged, but solo participants are also accepted.",
+  },
+  {
+    question: "How does the selection process work in Hacker House Goa?",
+    answer:
+      "- First, your team has to attend the shortlisting tasks\n- Top teams from shortlisting tasks are waitlisted\n- Best teams from the Waitlisted groups are selected for attending Hacker House Goa in-person.",
   },
   {
     question: "What should I bring to the event?",
@@ -1151,6 +1156,7 @@ function FigmaFaqCardLayer({
               overflow: "hidden",
               pointerEvents: isOpen ? "auto" : "none",
               maxWidth: "none",
+              whiteSpace: "pre-line",
             }}
           >
             {answerText ?? ""}
@@ -1867,7 +1873,23 @@ function FigmaLayer({
     return <FigmaButtonLayer node={node} depth={depth} viewportWidth={viewportWidth} faqCardId={faqCardId} />;
   }
 
-  const children = node.children ?? [];
+  const children = node.id === "54:27255"
+    ? (() => {
+        const list = node.children ?? [];
+        const lastChild = list.find((c) => c.id === "54:27326");
+        if (lastChild) {
+          return [
+            ...list,
+            {
+              ...lastChild,
+              id: "54:27326_extra",
+              name: "Frame 1948755149_extra",
+            },
+          ];
+        }
+        return list;
+      })()
+    : (node.children ?? []);
 
   return (
     <motion.div
