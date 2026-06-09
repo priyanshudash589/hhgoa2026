@@ -187,7 +187,7 @@ const faqEntries = [
   {
     question: "Who can participate in Hacker House Goa?",
     answer:
-      "Anyone with a passion for building! Whether you're a developer, designer, product manager, or just someone with great ideas - you're welcome here. Teams of 2-4 people are encouraged, but solo participants are also accepted.",
+      "Anyone with a passion for building! Whether you're a developer, designer, product manager, or just someone with great ideas - you're welcome here. Teams of 1-3 people are encouraged, but solo participants are also accepted.",
   },
   {
     question: "How does the selection process work in Hacker House Goa?",
