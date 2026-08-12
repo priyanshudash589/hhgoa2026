@@ -9,11 +9,16 @@ import {
   fillToStyle,
   fillToTextStyle,
   layoutToStyle,
+  resolveLayout,
   solidFillColor,
   strokeToStyle,
   textStyleToStyle,
 } from "@/lib/figma-mappers";
-import { computeCollapseInfo, TOTAL_HIDDEN_HEIGHT } from "@/lib/figma-collapse";
+import { computeCollapseInfo, getCollapseOffset, TOTAL_HIDDEN_HEIGHT } from "@/lib/figma-collapse";
+import { TimelineSection } from "@/components/home/timeline-section";
+import { NoticeBoardSection } from "@/components/home/notice-board-section";
+import { TasksSection } from "@/components/home/tasks-section";
+import { LeaderboardSection } from "@/components/home/leaderboard-section";
 
 type FigmaNode = {
   id: string;
@@ -33,7 +38,63 @@ type FigmaNode = {
 const rootNode = figmaHomeTree.rootNode as FigmaNode;
 const FIGMA_WIDTH = 1440;
 const BASE_FIGMA_HEIGHT = 16024;
-const FIGMA_HEIGHT = BASE_FIGMA_HEIGHT - TOTAL_HIDDEN_HEIGHT;
+
+// Hand-built sections spliced into the auto-generated Figma canvas. Each is
+// inserted "at" a raw Y-coordinate (right before whatever normally sits
+// there) — everything at/after that point gets pushed down by `height` to
+// make room, using the same offset mechanism figma-collapse.ts uses to hide
+// sections (just pushing content down instead of pulling it up).
+type CanvasInsertion = { id: string; atY: number; height: number };
+
+// Y-coordinate where the video ("check-hype") section's next sibling
+// ("2nd 1" / stats block) begins.
+const NOTICE_BOARD_INSERT_AT_Y = 2176;
+const NOTICE_BOARD_SECTION_HEIGHT = 950;
+
+// Tasks and Leaderboard share Notice Board's seam (all sit "right after the
+// video"); array order (below) places them Notice Board → Tasks →
+// Leaderboard.
+const TASKS_INSERT_AT_Y = NOTICE_BOARD_INSERT_AT_Y;
+const TASKS_SECTION_HEIGHT = 950;
+
+const LEADERBOARD_INSERT_AT_Y = NOTICE_BOARD_INSERT_AT_Y;
+const LEADERBOARD_SECTION_HEIGHT = 850;
+
+// Y-coordinate (raw Figma canvas space) where the "FAQs" heading begins.
+const TIMELINE_INSERT_AT_Y = 9516;
+const TIMELINE_SECTION_HEIGHT = 1200;
+
+const CANVAS_INSERTIONS: readonly CanvasInsertion[] = [
+  { id: "notice-board", atY: NOTICE_BOARD_INSERT_AT_Y, height: NOTICE_BOARD_SECTION_HEIGHT },
+  { id: "tasks", atY: TASKS_INSERT_AT_Y, height: TASKS_SECTION_HEIGHT },
+  { id: "leaderboard", atY: LEADERBOARD_INSERT_AT_Y, height: LEADERBOARD_SECTION_HEIGHT },
+  { id: "timeline", atY: TIMELINE_INSERT_AT_Y, height: TIMELINE_SECTION_HEIGHT },
+];
+
+// For a normal (non-inserted) child at raw Y, pass no `uptoIndex` — every
+// insertion at/before that Y pushes it down. For an insertion's own top, pass
+// its own array index, so only insertions earlier in the (intentional,
+// stacking-order) array push it — otherwise two insertions sharing the same
+// atY would each try to push the other down, and neither position would
+// resolve.
+function pushDownFor(y: number, uptoIndex?: number): number {
+  let push = 0;
+  CANVAS_INSERTIONS.forEach((insertion, index) => {
+    if (uptoIndex !== undefined && index >= uptoIndex) return;
+    if (insertion.atY <= y) push += insertion.height;
+  });
+  return push;
+}
+
+const TOTAL_INSERTED_HEIGHT = CANVAS_INSERTIONS.reduce((sum, i) => sum + i.height, 0);
+
+const FIGMA_HEIGHT = BASE_FIGMA_HEIGHT - TOTAL_HIDDEN_HEIGHT + TOTAL_INSERTED_HEIGHT;
+
+function getTopLevelNodeY(node: FigmaNode): number {
+  const layout = resolveLayout(node.layout) as Record<string, unknown> | undefined;
+  const location = layout?.locationRelativeToParent as Record<string, unknown> | undefined;
+  return (location?.y as number) ?? 0;
+}
 
 type RasterLayer = {
   src: string;
@@ -132,12 +193,12 @@ const NAV_LINKS: Record<string, string> = {
   "54:6": "/#check-hype",
   "54:13": "https://hacker-house-goa-2026.devfolio.co/", // CTA link
   "54:30955": "https://x.com/247pmstudio",
-  "54:30956": "https://x.com/ThePrayasu",
-  "54:30960": "https://t.me/ThePrayasu",
+  "54:30960": "https://t.me/twofourtysevenpm",
   "54:30964": "https://mail.google.com/mail/?view=cm&fs=1&to=satapathyprayasu@gmail.com",
+  "54:30949": "/terms", // Footer "Term & Conditions" link
 };
 
-const HIDDEN_NAV_IDS = new Set(["54:7", "54:8", "54:9", "54:10", "54:11"]);
+const HIDDEN_NAV_IDS = new Set(["54:7", "54:8", "54:9", "54:10", "54:11", "54:30956"]);
 
 const ROUTED_SECTION_IDS = new Set([
   "54:433",
@@ -1962,6 +2023,26 @@ export function FigmaHomeRenderer() {
     [],
   );
 
+  // Push everything at/after each inserted section's Y down by that
+  // section's height, on top of any existing collapse offsets.
+  const adjustedOffsets = useMemo(() => {
+    const out = new Map<string, number>();
+    for (const child of rootNode.children ?? []) {
+      const existing = collapseInfo.offsets.get(child.id) ?? 0;
+      const y = getTopLevelNodeY(child);
+      out.set(child.id, existing - pushDownFor(y));
+    }
+    return out;
+  }, [collapseInfo]);
+
+  const noticeBoardTop =
+    NOTICE_BOARD_INSERT_AT_Y - getCollapseOffset(NOTICE_BOARD_INSERT_AT_Y) + pushDownFor(NOTICE_BOARD_INSERT_AT_Y, 0);
+  const tasksTop = TASKS_INSERT_AT_Y - getCollapseOffset(TASKS_INSERT_AT_Y) + pushDownFor(TASKS_INSERT_AT_Y, 1);
+  const leaderboardTop =
+    LEADERBOARD_INSERT_AT_Y - getCollapseOffset(LEADERBOARD_INSERT_AT_Y) + pushDownFor(LEADERBOARD_INSERT_AT_Y, 2);
+  const timelineTop =
+    TIMELINE_INSERT_AT_Y - getCollapseOffset(TIMELINE_INSERT_AT_Y) + pushDownFor(TIMELINE_INSERT_AT_Y, 3);
+
   const scale = useMemo(() => viewportWidth / FIGMA_WIDTH, [viewportWidth]);
   const toggleFaqCard = useCallback((id: string) => {
     setOpenFaqCardId((current) => (current === id ? null : id));
@@ -2001,7 +2082,7 @@ export function FigmaHomeRenderer() {
             {(rootNode.children ?? [])
               .filter((child) => !collapseInfo.hiddenIds.has(child.id))
               .map((child) => {
-                const offset = collapseInfo.offsets.get(child.id) ?? 0;
+                const offset = adjustedOffsets.get(child.id) ?? 0;
                 if (offset === 0) {
                   return (
                     <FigmaLayer key={child.id} node={child} depth={1} viewportWidth={viewportWidth} />
@@ -2022,6 +2103,54 @@ export function FigmaHomeRenderer() {
                   </div>
                 );
               })}
+            <div
+              key="notice-board-section"
+              style={{
+                position: "absolute",
+                top: `${noticeBoardTop}px`,
+                left: 0,
+                width: "100%",
+                height: `${NOTICE_BOARD_SECTION_HEIGHT}px`,
+              }}
+            >
+              <NoticeBoardSection />
+            </div>
+            <div
+              key="timeline-section"
+              style={{
+                position: "absolute",
+                top: `${timelineTop}px`,
+                left: 0,
+                width: "100%",
+                height: `${TIMELINE_SECTION_HEIGHT}px`,
+              }}
+            >
+              <TimelineSection />
+            </div>
+            <div
+              key="tasks-section"
+              style={{
+                position: "absolute",
+                top: `${tasksTop}px`,
+                left: 0,
+                width: "100%",
+                height: `${TASKS_SECTION_HEIGHT}px`,
+              }}
+            >
+              <TasksSection />
+            </div>
+            <div
+              key="leaderboard-section"
+              style={{
+                position: "absolute",
+                top: `${leaderboardTop}px`,
+                left: 0,
+                width: "100%",
+                height: `${LEADERBOARD_SECTION_HEIGHT}px`,
+              }}
+            >
+              <LeaderboardSection />
+            </div>
           </FaqAccordionContext.Provider>
         </AgendaContext.Provider>
       </main>

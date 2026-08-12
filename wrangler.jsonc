@@ -1,0 +1,33 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "hhgoa",
+  "account_id": "ecf844701a0a0b0e2606b4ecfda907b4",
+  "main": "custom-worker.ts",
+  "compatibility_date": "2026-08-01",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "kv_namespaces": [
+    {
+      "binding": "HHGOA_KV",
+      "id": "512db5b17d244480bc1b160fb1bcb905"
+    }
+  ],
+  "durable_objects": {
+    "bindings": [
+      { "name": "RATE_LIMITER_DO", "class_name": "RateLimiterDO" }
+    ]
+  },
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["RateLimiterDO"] }
+  ],
+  "triggers": {
+    "crons": ["0 * * * *"]
+  },
+  "routes": [
+    { "pattern": "hhgoa.com", "custom_domain": true },
+    { "pattern": "www.hhgoa.com", "custom_domain": true }
+  ]
+}

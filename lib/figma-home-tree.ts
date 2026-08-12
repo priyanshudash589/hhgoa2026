@@ -4668,10 +4668,10 @@ export const figmaHomeTree = {
               },
               {
                 "id": "54:30960",
-                "name": "@ThePrayasu",
+                "name": "@twofourtysevenpm",
                 "type": "TEXT",
                 "layout": "layout_XM93Y8",
-                "text": "@ThePrayasu",
+                "text": "@twofourtysevenpm",
                 "textStyle": "style_WNXBCS",
                 "fills": "fill_3YOX9I"
               }
